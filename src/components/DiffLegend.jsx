@@ -1,24 +1,37 @@
 /**
  * DiffLegend Component
- * Legend explaining the diff color codes
+ * Shows the color coding for the comparison results
  */
 
 export default function DiffLegend() {
-    const items = [
-        { color: 'bg-green-500', label: 'Matched', description: 'Element exists in both files' },
-        { color: 'bg-amber-500', label: 'Extra', description: 'Element only in this file' },
-        { color: 'bg-purple-500', label: 'Different', description: 'Content or attributes differ' },
-    ];
-
     return (
-        <div className="flex flex-wrap items-center justify-center gap-6 py-3 px-6 bg-slate-100 rounded-xl">
-            {items.map((item) => (
-                <div key={item.label} className="flex items-center gap-2">
-                    <span className={`w-4 h-4 rounded-full ${item.color}`}></span>
-                    <span className="text-sm font-medium text-slate-700">{item.label}</span>
-                    <span className="text-xs text-slate-500 hidden sm:inline">({item.description})</span>
-                </div>
-            ))}
+        <div className="flex items-center gap-3 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm text-xs font-medium text-slate-600 flex-wrap">
+            {/* Node-level status indicators */}
+            <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                <span>Matched</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                <span>Extra</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                <span>Different</span>
+            </div>
+
+            {/* Separator */}
+            <div className="h-4 w-px bg-slate-300"></div>
+
+            {/* Specific change type indicators */}
+            <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded border border-orange-400 bg-orange-100"></span>
+                <span>Attr Changed</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded border border-cyan-400 bg-cyan-100"></span>
+                <span>Text Changed</span>
+            </div>
         </div>
     );
 }

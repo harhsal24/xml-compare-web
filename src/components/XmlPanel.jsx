@@ -5,6 +5,7 @@
 
 import { useRef, useState } from 'react';
 import XmlTreeNode from './XmlTreeNode';
+import XmlSyntaxView from './XmlSyntaxView';
 import useXmlStore from '../store/useXmlStore';
 
 export default function XmlPanel({ side, title }) {
@@ -16,7 +17,7 @@ export default function XmlPanel({ side, title }) {
         leftTree, rightTree,
         leftError, rightError,
         setLeftXml, setRightXml,
-        selectedXPath
+        selectedXPath, fontSize, isZenMode
     } = useXmlStore();
 
     const xml = side === 'left' ? leftXml : rightXml;
@@ -59,8 +60,8 @@ export default function XmlPanel({ side, title }) {
                         <button
                             onClick={() => setViewMode('text')}
                             className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${viewMode === 'text'
-                                    ? 'bg-blue-500 text-white shadow-sm'
-                                    : 'text-slate-400 hover:text-white'
+                                ? 'bg-blue-500 text-white shadow-sm'
+                                : 'text-slate-400 hover:text-white'
                                 }`}
                             title="Text View"
                         >
@@ -69,38 +70,51 @@ export default function XmlPanel({ side, title }) {
                         <button
                             onClick={() => setViewMode('tree')}
                             className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${viewMode === 'tree'
-                                    ? 'bg-blue-500 text-white shadow-sm'
-                                    : 'text-slate-400 hover:text-white'
+                                ? 'bg-blue-500 text-white shadow-sm'
+                                : 'text-slate-400 hover:text-white'
                                 }`}
                             title="Tree View"
                         >
                             🌳 Tree
                         </button>
+                        <button
+                            onClick={() => setViewMode('view')}
+                            className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${viewMode === 'view'
+                                ? 'bg-blue-500 text-white shadow-sm'
+                                : 'text-slate-400 hover:text-white'
+                                }`}
+                            title="Read-Only View"
+                        >
+                            👁️ View
+                        </button>
                     </div>
                 </div>
 
-                <div className="flex gap-2">
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".xml"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                        id={`file-upload-${side}`}
-                    />
-                    <label
-                        htmlFor={`file-upload-${side}`}
-                        className="px-3 py-1.5 bg-slate-600 hover:bg-slate-500 text-white rounded-lg text-sm font-medium cursor-pointer transition-colors flex items-center gap-1"
-                    >
-                        <span>📁</span> <span className="hidden sm:inline">Upload</span>
-                    </label>
-                    <button
-                        onClick={handleClear}
-                        className="px-3 py-1.5 bg-slate-600/50 text-white rounded-lg text-sm font-medium hover:bg-red-500/80 transition-colors"
-                    >
-                        Clear
-                    </button>
-                </div>
+                {/* Actions - Hide in Zen Mode for 'Pure UI' */}
+                {!isZenMode && (
+                    <div className="flex gap-2">
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".xml"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                            id={`file-upload-${side}`}
+                        />
+                        <label
+                            htmlFor={`file-upload-${side}`}
+                            className="px-3 py-1.5 bg-slate-600 hover:bg-slate-500 text-white rounded-lg text-sm font-medium cursor-pointer transition-colors flex items-center gap-1"
+                        >
+                            <span>📁</span> <span className="hidden sm:inline">Upload</span>
+                        </label>
+                        <button
+                            onClick={handleClear}
+                            className="px-3 py-1.5 bg-slate-600/50 text-white rounded-lg text-sm font-medium hover:bg-red-500/80 transition-colors"
+                        >
+                            Clear
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Content Area */}
@@ -119,7 +133,8 @@ export default function XmlPanel({ side, title }) {
                         value={xml}
                         onChange={(e) => setXml(e.target.value)}
                         placeholder="Paste XML here or upload a file..."
-                        className="flex-1 w-full p-4 text-sm font-mono bg-slate-50 resize-none focus:outline-none focus:bg-white transition-colors text-slate-800 leading-relaxed"
+                        className="flex-1 w-full p-4 font-mono bg-slate-50 resize-none focus:outline-none focus:bg-white transition-colors text-slate-800 leading-relaxed"
+                        style={{ fontSize: `${fontSize}px` }}
                         spellCheck={false}
                     />
                 )}
@@ -142,6 +157,11 @@ export default function XmlPanel({ side, title }) {
                             </div>
                         )}
                     </div>
+                )}
+
+                {/* Read-Only View */}
+                {viewMode === 'view' && (
+                    <XmlSyntaxView tree={tree} side={side} />
                 )}
 
                 {/* XPath Display (Floating Footer) */}

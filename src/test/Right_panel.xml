@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog>
+  <header><title>Global Inventory</title></header>
+  <settings environment="staging" debug="true"><timeout>3000</timeout></settings>
+  <store id="1"><name>New York</name><manager>Jane Smith</manager></store>
+  <products>
+    <item id="p1"><name>Laptop</name><price>1200</price></item>
+    <item id="p2"><name>Mouse</name></item>
+    <item id="p3"><name>Keyboard</name></item>
+  </products>
+</catalog>

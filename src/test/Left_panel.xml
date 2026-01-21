@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog>
+  <header><title>Global Inventory</title></header>
+  <settings environment="production" debug="false"><timeout>3000</timeout></settings>
+  <store id="1"><name>New York</name><manager>John Doe</manager></store>
+  <products>
+    <item id="p1"><name>Laptop</name><price>1200</price></item>
+    <item id="p2"><name>Mouse</name><description>Wireless</description></item>
+  </products>
+</catalog>

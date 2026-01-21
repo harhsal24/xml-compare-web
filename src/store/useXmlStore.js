@@ -29,6 +29,12 @@ const useXmlStore = create((set, get) => ({
     activeCategory: null, // 'matched', 'different', 'leftOnly', 'rightOnly'
 
     // Actions
+    // View Settings
+    fontSize: 14,
+    isZenMode: false,
+    setFontSize: (size) => set({ fontSize: size }),
+    toggleZenMode: () => set((state) => ({ isZenMode: !state.isZenMode })),
+
     setLeftXml: (xml) => {
         let tree = null;
         let error = null;
