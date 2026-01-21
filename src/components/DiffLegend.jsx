@@ -3,20 +3,22 @@
  * Shows the color coding for the comparison results
  */
 
+import { LEGEND_COLORS } from '../utils/colorConfig';
+
 export default function DiffLegend() {
     return (
         <div className="flex items-center gap-3 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm text-xs font-medium text-slate-600 flex-wrap">
             {/* Node-level status indicators */}
             <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                <span className={`w-2.5 h-2.5 rounded-full ${LEGEND_COLORS.matched}`}></span>
                 <span>Matched</span>
             </div>
             <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                <span className={`w-2.5 h-2.5 rounded-full ${LEGEND_COLORS.extra}`}></span>
                 <span>Extra</span>
             </div>
             <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                <span className={`w-2.5 h-2.5 rounded-full ${LEGEND_COLORS.different}`}></span>
                 <span>Different</span>
             </div>
 
@@ -25,11 +27,11 @@ export default function DiffLegend() {
 
             {/* Specific change type indicators */}
             <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded border border-orange-400 bg-orange-100"></span>
+                <span className={`w-2.5 h-2.5 rounded border ${LEGEND_COLORS.attrChanged}`}></span>
                 <span>Attr Changed</span>
             </div>
             <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded border border-cyan-400 bg-cyan-100"></span>
+                <span className={`w-2.5 h-2.5 rounded border ${LEGEND_COLORS.textChanged}`}></span>
                 <span>Text Changed</span>
             </div>
         </div>

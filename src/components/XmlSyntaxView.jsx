@@ -8,6 +8,7 @@ import { useMemo } from 'react';
 import useXmlStore from '../store/useXmlStore';
 import { getDiffStatus } from '../utils/xmlComparer';
 import { findNodeByXPath } from '../utils/xmlParser';
+import { VIEW_ONLY_COLORS } from '../utils/colorConfig';
 
 export default function XmlSyntaxView({ tree, side }) {
     const { diffResults, fontSize, leftTree, rightTree } = useXmlStore();
@@ -36,14 +37,9 @@ function RecursiveNode({ node, depth, side, diffResults, fontSize, otherTree }) 
     // 1. Determine Diff Status for this node
     const status = getDiffStatus(node.xpath, diffResults, side);
 
-    // 2. Determine Background Color for the whole block - Softer, less saturated
-    const bgClass = {
-        matched: 'bg-green-100/60',
-        extra: 'bg-amber-100/60', // Left Only / Right Only
-        different: 'bg-purple-100/50', // Subtle purple base for diffs
-        missing: 'bg-red-100/60',
-        neutral: 'hover:bg-slate-50'
-    }[status] || 'hover:bg-slate-50';
+    // 2. Determine Background Color from config
+    const bgClass = VIEW_ONLY_COLORS.status[status] || VIEW_ONLY_COLORS.status.neutral;
+    const borderClass = VIEW_ONLY_COLORS.border[status] || VIEW_ONLY_COLORS.border.neutral;
 
     const hasChildren = node.children && node.children.length > 0;
 
@@ -73,20 +69,17 @@ function RecursiveNode({ node, depth, side, diffResults, fontSize, otherTree }) 
         }
     }
 
-    // Attribute Rendering with highlighting - Orange theme with background + border
+    // Attribute Rendering with highlighting from config
     const attributes = Object.entries(node.attributes).map(([key, value]) => {
         const isAttrDiff = attributesChanged[key];
-        // If attribute changed, highlight with subtle orange background and border
-        const attrClasses = isAttrDiff
-            ? 'bg-orange-100 border border-orange-400/70 rounded px-1 mx-0.5'
-            : '';
+        const attrColors = isAttrDiff ? VIEW_ONLY_COLORS.attribute.changed : VIEW_ONLY_COLORS.attribute.normal;
 
         return (
-            <span key={key} className={attrClasses}>
+            <span key={key} className={attrColors.container}>
                 {' '}
-                <span className={`${isAttrDiff ? 'text-orange-900 font-bold' : 'text-purple-600'}`}>{key}</span>
+                <span className={attrColors.key}>{key}</span>
                 <span className="text-slate-500">=</span>
-                <span className={`${isAttrDiff ? 'text-orange-800 font-semibold' : 'text-green-600'}`}>"{value}"</span>
+                <span className={attrColors.value}>"{value}"</span>
             </span>
         );
     });
@@ -98,11 +91,7 @@ function RecursiveNode({ node, depth, side, diffResults, fontSize, otherTree }) 
             {/* The previous replace was too broad. I will target the attribute map and return block. */}
 
             {/* Opening Tag Line */}
-            <div className={`px-2 -mx-2 whitespace-pre ${bgClass} transition-colors duration-200 border-l-2 ${status === 'matched' ? 'border-green-400' :
-                status === 'extra' ? 'border-amber-400' :
-                    status === 'different' ? 'border-purple-400' :
-                        'border-transparent'
-                }`}>
+            <div className={`px-2 -mx-2 whitespace-pre ${bgClass} transition-colors duration-200 border-l-2 ${borderClass}`}>
                 <span style={{ paddingLeft: `${indent}px` }}>
                     <span className="text-slate-400">&lt;</span>
                     <span className="text-blue-700 font-semibold">{node.tagName}</span>
@@ -111,11 +100,11 @@ function RecursiveNode({ node, depth, side, diffResults, fontSize, otherTree }) 
                         {hasChildren ? '>' : (node.textContent ? '>' : ' />')}
                     </span>
 
-                    {/* Inline Text Content (Leaf Node Value) - Subtle cyan theme with background + border */}
+                    {/* Inline Text Content (Leaf Node Value) */}
                     {!hasChildren && node.textContent && (
                         <span className={`font-medium ${textChanged
-                            ? 'bg-cyan-100 text-cyan-800 border border-cyan-400/70 px-1.5 py-0.5 rounded mx-1'
-                            : 'text-slate-900'}`}>
+                            ? VIEW_ONLY_COLORS.textContent.changed
+                            : VIEW_ONLY_COLORS.textContent.normal}`}>
                             {node.textContent}
                         </span>
                     )}
@@ -146,11 +135,7 @@ function RecursiveNode({ node, depth, side, diffResults, fontSize, otherTree }) 
 
             {/* Closing Tag Line (Only if has children) */}
             {hasChildren && (
-                <div className={`px-2 -mx-2 whitespace-pre ${bgClass} transition-colors duration-200 border-l-2 ${status === 'matched' ? 'border-green-400' :
-                    status === 'extra' ? 'border-amber-400' :
-                        status === 'different' ? 'border-purple-400' :
-                            'border-transparent'
-                    }`}>
+                <div className={`px-2 -mx-2 whitespace-pre ${bgClass} transition-colors duration-200 border-l-2 ${borderClass}`}>
                     <span style={{ paddingLeft: `${indent}px` }}>
                         <span className="text-slate-400">&lt;/</span>
                         <span className="text-blue-700 font-semibold">{node.tagName}</span>

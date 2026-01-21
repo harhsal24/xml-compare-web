@@ -6,6 +6,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { getDiffStatus } from '../utils/xmlComparer';
 import { findNodeByXPath } from '../utils/xmlParser';
+import { TREE_VIEW_COLORS } from '../utils/colorConfig';
 import useXmlStore from '../store/useXmlStore';
 
 export default function XmlTreeNode({ node, side, depth = 0 }) {
@@ -61,16 +62,8 @@ export default function XmlTreeNode({ node, side, depth = 0 }) {
         }
     }, [isSelected]);
 
-    // Color classes based on diff status - Softer, less saturated
-    const statusColors = {
-        matched: 'bg-green-100/80 border-green-400 text-green-800',
-        extra: 'bg-amber-100/80 border-amber-400 text-amber-800',
-        missing: 'bg-red-100/80 border-red-400 text-red-800',
-        different: 'bg-purple-100/80 border-purple-400 text-purple-800',
-        neutral: 'bg-slate-50 border-slate-300 text-slate-700',
-    };
-
-    const colorClass = statusColors[status] || statusColors.neutral;
+    // Get color class from config
+    const colorClass = TREE_VIEW_COLORS.status[status] || TREE_VIEW_COLORS.status.neutral;
 
     // Format attributes for display with highlighting
     const attrsDisplay = Object.entries(node.attributes).map(([key, value]) => {
@@ -109,32 +102,26 @@ export default function XmlTreeNode({ node, side, depth = 0 }) {
                 {/* Attributes - with individual highlighting */}
                 {attrsDisplay.length > 0 && (
                     <span className="ml-1">
-                        {attrsDisplay.map(({ key, value, isAttrDiff }) => (
-                            <span
-                                key={key}
-                                className={isAttrDiff
-                                    ? 'bg-orange-100 border border-orange-400/70 rounded px-1 mx-0.5'
-                                    : ''}
-                            >
-                                <span className={isAttrDiff ? 'text-orange-900 font-bold' : 'text-purple-600'}>
-                                    {key}
+                        {attrsDisplay.map(({ key, value, isAttrDiff }) => {
+                            const attrColors = isAttrDiff ? TREE_VIEW_COLORS.attribute.changed : TREE_VIEW_COLORS.attribute.normal;
+                            return (
+                                <span key={key} className={attrColors.container}>
+                                    <span className={attrColors.key}>{key}</span>
+                                    <span className="text-slate-500">=</span>
+                                    <span className={attrColors.value}>"{value}"</span>
                                 </span>
-                                <span className="text-slate-500">=</span>
-                                <span className={isAttrDiff ? 'text-orange-800 font-semibold' : 'text-purple-600'}>
-                                    "{value}"
-                                </span>
-                            </span>
-                        ))}
+                            );
+                        })}
                     </span>
                 )}
 
                 <span className="text-blue-600 font-semibold">&gt;</span>
 
-                {/* Text content (if leaf node or has direct text) - Subtle cyan theme */}
+                {/* Text content (if leaf node or has direct text) */}
                 {node.textContent && !hasChildren && (
                     <span className={`ml-1 truncate max-w-xs ${textChanged
-                        ? 'bg-cyan-100 text-cyan-800 border border-cyan-400/70 px-1.5 py-0.5 rounded'
-                        : 'text-gray-700'
+                        ? TREE_VIEW_COLORS.textContent.changed
+                        : TREE_VIEW_COLORS.textContent.normal
                         }`}>
                         {node.textContent}
                     </span>
@@ -147,10 +134,7 @@ export default function XmlTreeNode({ node, side, depth = 0 }) {
 
                 {/* Status badge */}
                 {status !== 'neutral' && diffResults && (
-                    <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide ${status === 'matched' ? 'bg-green-500 text-white' :
-                        status === 'extra' ? 'bg-amber-500 text-white' :
-                            status === 'different' ? 'bg-purple-500 text-white' :
-                                'bg-red-500 text-white'
+                    <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide ${TREE_VIEW_COLORS.badge[status] || TREE_VIEW_COLORS.badge.missing
                         }`}>
                         {status}
                     </span>
