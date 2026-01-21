@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Simple XML with basic nested structure -->
+<root>
+  <item id="1">
+    <name>Product A</name>
+    <value>100</value>
+  </item>
+  <item id="2">
+    <name>Product B</name>
+  </item>
+</root>

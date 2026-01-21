@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- XML with many identical sibling elements for index testing -->
+<list>
+  <item>First</item>
+  <item>Second</item>
+  <item>Third</item>
+  <item>Fourth</item>
+  <item>Fifth</item>
+  <other>Different tag</other>
+  <item>Sixth</item>
+</list>

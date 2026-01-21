@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Deeply nested XML structure for testing deep XPath generation -->
+<catalog>
+  <category name="electronics">
+    <subcategory name="phones">
+      <product id="p1">
+        <brand>Apple</brand>
+        <model>iPhone 15</model>
+        <specs>
+          <screen size="6.1" unit="inch"/>
+          <storage>128GB</storage>
+          <color>Black</color>
+        </specs>
+        <price currency="USD">999</price>
+      </product>
+      <product id="p2">
+        <brand>Samsung</brand>
+        <model>Galaxy S24</model>
+        <specs>
+          <screen size="6.2" unit="inch"/>
+          <storage>256GB</storage>
+          <color>Purple</color>
+        </specs>
+        <price currency="USD">899</price>
+      </product>
+    </subcategory>
+    <subcategory name="laptops">
+      <product id="l1">
+        <brand>Dell</brand>
+        <model>XPS 15</model>
+        <specs>
+          <screen size="15.6" unit="inch"/>
+          <ram>16GB</ram>
+          <storage>512GB SSD</storage>
+        </specs>
+        <price currency="USD">1299</price>
+      </product>
+    </subcategory>
+  </category>
+  <category name="books">
+    <book isbn="978-0-13-468599-1">
+      <title>Clean Code</title>
+      <author>Robert C. Martin</author>
+      <year>2008</year>
+    </book>
+  </category>
+</catalog>

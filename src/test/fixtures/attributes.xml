@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- XML with various attributes for attribute parsing tests -->
+<config version="1.0" environment="production">
+  <database host="localhost" port="5432" ssl="true">
+    <credentials username="admin" encrypted="true"/>
+    <pool min="5" max="20" timeout="30000"/>
+  </database>
+  <cache enabled="true" ttl="3600">
+    <provider name="redis" cluster="true"/>
+  </cache>
+  <logging level="info" format="json" rotate="daily"/>
+</config>

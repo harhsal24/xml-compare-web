@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Simple XML with different structure for comparison -->
+<root>
+  <item id="1">
+    <name>Product A</name>
+    <price>100</price>
+  </item>
+  <item id="2">
+    <name>Product B</name>
+    <description>New item</description>
+  </item>
+</root>

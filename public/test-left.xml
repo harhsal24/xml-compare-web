@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog>
+  <!-- SCENARIO 1: MATCHED -->
+  <header>
+    <title>Global Inventory</title>
+    <timestamp>2023-10-27T10:00:00Z</timestamp>
+  </header>
+
+  <!-- SCENARIO 2: DIFFERENT ATTRIBUTES -->
+  <settings environment="production" debug="false">
+    <timeout>3000</timeout>
+  </settings>
+
+  <!-- SCENARIO 3: DIFFERENT TEXT CONTENT -->
+  <store id="1">
+    <name>New York Branch</name>
+    <manager>John Doe</manager> <!-- Different value -->
+  </store>
+
+  <!-- SCENARIO 4: MIXED NESTED STRUCTURES -->
+  <products>
+    <!-- Item 1: Identical -->
+    <item id="p1">
+      <name>Laptop</name>
+      <price>1200</price>
+    </item>
+
+    <!-- Item 2: Missing element in right (LEFT ONLY / EXTRA) -->
+    <item id="p2">
+      <name>Mouse</name>
+      <price>25</price>
+      <description>Wireless optical mouse</description> <!-- Missing in right -->
+    </item>
+
+    <!-- Item 3: Has extra sibling in left -->
+    <item id="p3">
+      <name>Keyboard</name>
+      <type>Mechanical</type> <!-- Left only -->
+    </item>
+  </products>
+
+  <!-- SCENARIO 5: DEEP NESTING WITH DIFFS -->
+  <users>
+    <user id="u1">
+      <profile>
+        <preferences>
+          <theme>Dark</theme> <!-- Different -->
+          <notifications>
+            <email>true</email>
+          </notifications>
+        </preferences>
+      </profile>
+    </user>
+  </users>
+</catalog>
