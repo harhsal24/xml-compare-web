@@ -3,6 +3,7 @@ import { getDiffStatus } from '../utils/xmlComparer';
 import { findNodeByXPath } from '../utils/xmlParser';
 import { TREE_VIEW_COLORS } from '../utils/colorConfig';
 import useXmlStore from '../store/useXmlStore';
+import { useToast } from './Toast';
 
 const VirtualTreeNode = memo(({
     node,
@@ -14,6 +15,7 @@ const VirtualTreeNode = memo(({
     side,
     data // react-window data prop if needed, or we can use hooks
 }) => {
+    const { addToast } = useToast();
     const {
         diffResults,
         selectedXPath,
@@ -56,9 +58,6 @@ const VirtualTreeNode = memo(({
     const isSelected = selectedXPath === node.xpath;
     const indentation = depth * (fontSize * 1.2);
 
-    // DEBUG: Log sibling info for ALL nodes to diagnose
-    console.log(`[TreeNode] ${node.tagName}: siblingIndex=${node.siblingIndex}, siblingTotal=${node.siblingTotal}, hasIndex=${node.siblingIndex !== undefined}, keys=${Object.keys(node).join(',')}`);
-
     // Get color class from config
     const isNoneStyle = treeViewStyle === 'none';
     const colorClass = isNoneStyle ? '' : (TREE_VIEW_COLORS.status[status] || TREE_VIEW_COLORS.status.neutral);
@@ -86,7 +85,7 @@ const VirtualTreeNode = memo(({
                         e.stopPropagation();
                         if (node.textContent) {
                             navigator.clipboard.writeText(node.textContent);
-                            console.log('Copied:', node.textContent);
+                            addToast(`Copied: ${node.textContent}`);
                         }
                         return;
                     }

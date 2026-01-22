@@ -8,6 +8,7 @@ import { getDiffStatus } from '../utils/xmlComparer';
 import { findNodeByXPath } from '../utils/xmlParser';
 import { TREE_VIEW_COLORS } from '../utils/colorConfig';
 import useXmlStore from '../store/useXmlStore';
+import { useToast } from './Toast';
 
 // Performance optimization: collapse nodes deeper than this level by default
 const AUTO_COLLAPSE_DEPTH = 3;
@@ -16,6 +17,7 @@ const XmlTreeNode = memo(function XmlTreeNode({ node, side, depth = 0 }) {
     // Start collapsed if depth > AUTO_COLLAPSE_DEPTH to improve performance with large files
     const [expanded, setExpanded] = useState(depth < AUTO_COLLAPSE_DEPTH);
     const elementRef = useRef(null);
+    const { addToast } = useToast();
     const {
         diffResults,
         selectedXPath,
@@ -111,7 +113,7 @@ const XmlTreeNode = memo(function XmlTreeNode({ node, side, depth = 0 }) {
                         e.stopPropagation();
                         if (node.textContent) {
                             navigator.clipboard.writeText(node.textContent);
-                            console.log('Copied:', node.textContent);
+                            addToast(`Copied: ${node.textContent}`);
                         }
                         return;
                     }
