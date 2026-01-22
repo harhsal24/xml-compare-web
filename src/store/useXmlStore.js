@@ -8,6 +8,27 @@ import { parseXml } from '../core/xmlParser';
 import { compareXml } from '../core/xmlComparer';
 import { DEBUG_MODE } from '../config';
 
+const XPATH_SETTINGS_KEY = 'xmlCompare_xpathSettings';
+
+const defaultXpathSettings = {
+    elementsArray: [],
+    indexAttribute: null,
+    leafOmit: true
+};
+
+// Load settings from localStorage or use defaults
+const loadXpathSettings = () => {
+    try {
+        const stored = localStorage.getItem(XPATH_SETTINGS_KEY);
+        if (stored) {
+            return { ...defaultXpathSettings, ...JSON.parse(stored) };
+        }
+    } catch (e) {
+        console.warn('Failed to load xpath settings from localStorage:', e);
+    }
+    return defaultXpathSettings;
+};
+
 const useXmlStore = create((set, get) => ({
     // Raw XML strings
     leftXml: '',
@@ -34,6 +55,9 @@ const useXmlStore = create((set, get) => ({
     // Debug mode
     isDebugMode: DEBUG_MODE,
 
+    // XPath Settings
+    xpathSettings: loadXpathSettings(),
+
     // View Settings
     fontSize: 14,
     isZenMode: false,
@@ -42,6 +66,27 @@ const useXmlStore = create((set, get) => ({
     showLeafDots: true,
     showStatusBadges: true,
     isScrollLocked: false, // New state for scroll synchronization
+
+    setXpathSettings: (settings) => {
+        const newSettings = { ...get().xpathSettings, ...settings };
+        try {
+            localStorage.setItem(XPATH_SETTINGS_KEY, JSON.stringify(newSettings));
+        } catch (e) {
+            console.warn('Failed to save xpath settings to localStorage:', e);
+        }
+        set({ xpathSettings: newSettings });
+    },
+
+    loadXpathSettingsFromFile: async (file) => {
+        try {
+            const text = await file.text();
+            const settings = JSON.parse(text);
+            get().setXpathSettings(settings);
+            return { success: true };
+        } catch (e) {
+            return { success: false, error: e.message };
+        }
+    },
 
     setFontSize: (size) => {
         if (DEBUG_MODE) console.log('Setting font size:', size);
@@ -103,7 +148,7 @@ const useXmlStore = create((set, get) => ({
     },
 
     compare: () => {
-        const { leftXml, rightXml, isDebugMode } = get();
+        const { leftXml, rightXml, isDebugMode, xpathSettings } = get();
         if (isDebugMode) console.log('Comparing XMLs');
 
         if (!leftXml || !rightXml) {
@@ -117,10 +162,10 @@ const useXmlStore = create((set, get) => ({
             try {
                 // Step 1: Parse both XML strings
                 if (isDebugMode) console.log('Parsing left XML...');
-                const leftTree = parseXml(leftXml);
+                const leftTree = parseXml(leftXml, xpathSettings);
 
                 if (isDebugMode) console.log('Parsing right XML...');
-                const rightTree = parseXml(rightXml);
+                const rightTree = parseXml(rightXml, xpathSettings);
 
                 // Step 2: Compare the parsed trees
                 if (isDebugMode) console.log('Comparing trees...');

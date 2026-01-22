@@ -55,6 +55,10 @@
  * 3. Tree structure normalization with XPath generation
  * 
  * @param {string} xmlString - The raw XML string to parse
+ * @param {Object} xpathSettings - Optional settings for XPath generation
+ * @param {string[]} xpathSettings.elementsArray - Tags to omit [1] index for
+ * @param {string|null} xpathSettings.indexAttribute - Attribute to use for indexing
+ * @param {boolean} xpathSettings.leafOmit - Whether to omit [1] for leaf nodes
  * @returns {XmlNode} The root node of the parsed tree
  * @throws {Error} If the XML is invalid or empty
  * 
@@ -63,7 +67,15 @@
  * console.log(tree.xpath); // "/root"
  * console.log(tree.children[0].xpath); // "/root/item"
  */
-export function parseXml(xmlString) {
+export function parseXml(xmlString, xpathSettings = {}) {
+    // Merge with defaults
+    const settings = {
+        elementsArray: [],
+        indexAttribute: null,
+        leafOmit: true,
+        ...xpathSettings
+    };
+
     // Step 1: Validate input is not empty
     validateXmlInput(xmlString);
 
@@ -74,7 +86,7 @@ export function parseXml(xmlString) {
     checkForParseErrors(xmlDoc);
 
     // Step 4: Build and return the normalized tree
-    return buildTreeFromElement(xmlDoc.documentElement, '');
+    return buildTreeFromElement(xmlDoc.documentElement, '', settings);
 }
 
 /**
@@ -83,6 +95,7 @@ export function parseXml(xmlString) {
  * Use this when you want to handle errors gracefully without try/catch.
  * 
  * @param {string} xmlString - The raw XML string to parse
+ * @param {Object} xpathSettings - Optional settings for XPath generation
  * @returns {ParseResult} Object containing success status, tree, and error
  * 
  * @example
@@ -93,9 +106,9 @@ export function parseXml(xmlString) {
  *   showError(result.error);
  * }
  */
-export function safeParseXml(xmlString) {
+export function safeParseXml(xmlString, xpathSettings = {}) {
     try {
-        const tree = parseXml(xmlString);
+        const tree = parseXml(xmlString, xpathSettings);
         return { success: true, tree, error: null };
     } catch (error) {
         return { success: false, tree: null, error: error.message };
@@ -188,24 +201,24 @@ function extractErrorMessage(parseError) {
  * 
  * @param {Element} element - The DOM element to process
  * @param {string} parentPath - The XPath of the parent element
+ * @param {Object} settings - XPath generation settings
  * @returns {XmlNode} The normalized tree node
  */
-function buildTreeFromElement(element, parentPath) {
+function buildTreeFromElement(element, parentPath, settings) {
     // Get basic element info
     const tagName = element.tagName;
 
+    // Check if this is a leaf node (no child elements)
+    const hasChildElements = Array.from(element.childNodes).some(n => n.nodeType === 1);
+    const isLeaf = !hasChildElements;
+
     // Calculate XPath for this element
-    const xpath = calculateXPath(element, parentPath);
+    const xpath = calculateXPath(element, parentPath, settings, isLeaf);
 
     // Calculate sibling index and total for display
     const siblings = findSameSiblings(element);
     const siblingTotal = siblings.length;
-    const siblingIndex = siblings.indexOf(element) + 1; // 1-based index
-
-    // DEBUG: Log sibling info for elements with multiple siblings
-    if (siblingTotal > 1) {
-        console.log(`[Parser] ${tagName}: siblingIndex=${siblingIndex}, siblingTotal=${siblingTotal}`);
-    }
+    const siblingIndex = calculateIndex(element, settings, siblings);
 
     // Extract attributes
     const attributes = extractAttributes(element);
@@ -214,7 +227,7 @@ function buildTreeFromElement(element, parentPath) {
     const textContent = extractDirectTextContent(element);
 
     // Recursively build child nodes
-    const children = buildChildNodes(element, xpath);
+    const children = buildChildNodes(element, xpath, settings);
 
     // Generate comparison key
     const key = generateComparisonKey(tagName, attributes);
@@ -232,33 +245,74 @@ function buildTreeFromElement(element, parentPath) {
 }
 
 /**
+ * Calculate the index for an element based on settings.
+ * 
+ * @param {Element} element - The DOM element
+ * @param {Object} settings - XPath generation settings
+ * @param {Element[]} siblings - Sibling elements with the same tag
+ * @returns {number} The 1-based index
+ */
+function calculateIndex(element, settings, siblings) {
+    const { indexAttribute } = settings;
+
+    // If indexAttribute is set and element has it, use that value
+    if (indexAttribute && element.hasAttribute(indexAttribute)) {
+        const val = parseInt(element.getAttribute(indexAttribute), 10);
+        if (!Number.isNaN(val) && val >= 1) {
+            return val;
+        }
+    }
+
+    // Otherwise, calculate from sibling position
+    return siblings.indexOf(element) + 1;
+}
+
+/**
  * Calculate the XPath for an element based on its position among siblings.
  * 
- * XPath uses 1-based indexing and only adds an index when there are
- * multiple siblings with the same tag name.
+ * Uses configurable settings to determine when to show index.
  * 
  * @param {Element} element - The DOM element
  * @param {string} parentPath - The parent element's XPath
+ * @param {Object} settings - XPath generation settings
+ * @param {boolean} isLeaf - Whether this is a leaf node
  * @returns {string} The full XPath for this element
- * 
- * @example
- * // For <root><item/><item/></root>, the second item's XPath is:
- * // "/root/item[2]"
  */
-function calculateXPath(element, parentPath) {
+function calculateXPath(element, parentPath, settings, isLeaf) {
     const tagName = element.tagName;
+    const tagNameLower = tagName.toLowerCase();
+    const { elementsArray, indexAttribute, leafOmit } = settings;
 
     // Find siblings with the same tag name
     const siblings = findSameSiblings(element);
 
-    // Calculate 1-based index
-    const index = siblings.indexOf(element) + 1;
+    // Calculate index
+    const index = calculateIndex(element, settings, siblings);
 
-    // Only add index suffix if there are multiple siblings with same tag
-    const needsIndex = siblings.length > 1;
-    const indexSuffix = needsIndex ? `[${index}]` : '';
+    // Determine whether to display the index
+    let step = tagName;
 
-    return `${parentPath}/${tagName}${indexSuffix}`;
+    if (index > 1) {
+        // Always show index if > 1
+        step += `[${index}]`;
+    } else {
+        // index == 1: decide whether to omit [1]
+        const isInElementsArray = elementsArray.includes(tagNameLower);
+        const shouldOmitForLeaf = leafOmit && isLeaf;
+
+        // Omit [1] if:
+        // - tag is in elementsArray, OR
+        // - leafOmit is true and this is a leaf node, OR
+        // - there's only one sibling (backwards compatibility)
+        if (isInElementsArray || shouldOmitForLeaf || siblings.length === 1) {
+            // No index appended
+        } else {
+            // Optionally add [1] for non-array, non-leaf nodes
+            // Currently omitting for cleaner XPaths
+        }
+    }
+
+    return `${parentPath}/${step}`;
 }
 
 /**
@@ -326,13 +380,14 @@ function extractDirectTextContent(element) {
  * 
  * @param {Element} element - The parent DOM element
  * @param {string} parentXpath - The XPath of the parent element
+ * @param {Object} settings - XPath generation settings
  * @returns {XmlNode[]} Array of child tree nodes
  */
-function buildChildNodes(element, parentXpath) {
+function buildChildNodes(element, parentXpath, settings) {
     const children = [];
 
     for (const child of element.children) {
-        children.push(buildTreeFromElement(child, parentXpath));
+        children.push(buildTreeFromElement(child, parentXpath, settings));
     }
 
     return children;
