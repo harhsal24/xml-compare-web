@@ -81,7 +81,17 @@ const VirtualTreeNode = memo(({
                     ${isSelected ? 'bg-blue-100/50 ring-1 ring-blue-500 z-10' : 'hover:bg-slate-100/50'}
                 `}
                 style={{ paddingLeft: `${indentation + 8}px`, fontSize: `${fontSize}px` }}
-                onClick={() => setSelectedXPath(node.xpath)}
+                onClick={(e) => {
+                    if (e.ctrlKey || e.metaKey) {
+                        e.stopPropagation();
+                        if (node.textContent) {
+                            navigator.clipboard.writeText(node.textContent);
+                            console.log('Copied:', node.textContent);
+                        }
+                        return;
+                    }
+                    setSelectedXPath(node.xpath);
+                }}
             >
                 {/* Expand/Collapse toggle */}
                 <div

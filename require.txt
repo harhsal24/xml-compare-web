@@ -54,3 +54,7 @@ i want it like <element>2/5
 where 2 is its index from similar 5 sibliings 
 i dont want to see 1/1
 i only want it if we have same mutiple more than 1 
+
+
+I want a way to copy the value of the leaf node 
+can you copy the value if ctrl key is pressed and mouse click on leaf node 

@@ -106,7 +106,17 @@ const XmlTreeNode = memo(function XmlTreeNode({ node, side, depth = 0 }) {
           ${isSelected ? 'ring-2 ring-blue-500 shadow-lg z-10 scale-[1.02]' : 'hover:shadow-md hover:scale-[1.01]'}
         `}
                 style={{ marginLeft: `${indentation}px` }}
-                onClick={() => setSelectedXPath(node.xpath)}
+                onClick={(e) => {
+                    if (e.ctrlKey || e.metaKey) {
+                        e.stopPropagation();
+                        if (node.textContent) {
+                            navigator.clipboard.writeText(node.textContent);
+                            console.log('Copied:', node.textContent);
+                        }
+                        return;
+                    }
+                    setSelectedXPath(node.xpath);
+                }}
             >
                 {/* Expand/Collapse toggle */}
                 {hasChildren ? (
