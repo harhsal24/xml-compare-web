@@ -1,0 +1,9 @@
+The code doen't work with big xml files
+
+After comparing 2 large xml file it frezees below issues are shown 
+1) In tree view styling is breaking like the toogalable box leafnode
+2) In tree view sometimes values don't get shown 
+3) I want a setting to customize tree view 
+like to turn on and off border in tree view, also transfer font size 
+4)I file path is to log i wont fit in xpath that shown below
+

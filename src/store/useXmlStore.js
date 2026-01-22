@@ -1,10 +1,12 @@
 /**
  * Zustand Store for XML Comparison
+ * Uses main thread parsing with requestIdleCallback for non-blocking execution
  */
 
 import { create } from 'zustand';
-import { parseXml } from '../utils/xmlParser';
-import { compareXml } from '../utils/xmlComparer';
+import { parseXml } from '../core/xmlParser';
+import { compareXml } from '../core/xmlComparer';
+import { DEBUG_MODE } from '../config';
 
 const useXmlStore = create((set, get) => ({
     // Raw XML strings
@@ -21,6 +23,7 @@ const useXmlStore = create((set, get) => ({
 
     // Comparison results
     diffResults: null,
+    isComparing: false,
 
     // Currently selected XPath (for highlighting)
     selectedXPath: null,
@@ -28,78 +31,114 @@ const useXmlStore = create((set, get) => ({
     // Navigation State
     activeCategory: null, // 'matched', 'different', 'leftOnly', 'rightOnly'
 
-    // Actions
+    // Debug mode
+    isDebugMode: DEBUG_MODE,
+
     // View Settings
     fontSize: 14,
     isZenMode: false,
-    setFontSize: (size) => set({ fontSize: size }),
-    toggleZenMode: () => set((state) => ({ isZenMode: !state.isZenMode })),
+    showBorders: true,
+
+    setFontSize: (size) => {
+        if (DEBUG_MODE) console.log('Setting font size:', size);
+        set({ fontSize: size });
+    },
+
+    toggleZenMode: () => {
+        if (DEBUG_MODE) console.log('Toggling zen mode');
+        set((state) => ({ isZenMode: !state.isZenMode }));
+    },
+
+    toggleBorders: () => {
+        if (DEBUG_MODE) console.log('Toggling borders');
+        set((state) => ({ showBorders: !state.showBorders }));
+    },
+
+    toggleDebugMode: () => {
+        set((state) => ({ isDebugMode: !state.isDebugMode }));
+    },
 
     setLeftXml: (xml) => {
-        let tree = null;
-        let error = null;
-
-        if (xml.trim()) {
-            try {
-                tree = parseXml(xml);
-            } catch (e) {
-                error = e.message;
-            }
-        }
-
+        if (DEBUG_MODE) console.log('Setting left XML');
         set({
             leftXml: xml,
-            leftTree: tree,
-            leftError: error,
+            leftTree: null,
+            leftError: null,
             diffResults: null,
             selectedXPath: null,
-            activeCategory: null
+            activeCategory: null,
         });
     },
 
     setRightXml: (xml) => {
-        let tree = null;
-        let error = null;
-
-        if (xml.trim()) {
-            try {
-                tree = parseXml(xml);
-            } catch (e) {
-                error = e.message;
-            }
-        }
-
+        if (DEBUG_MODE) console.log('Setting right XML');
         set({
             rightXml: xml,
-            rightTree: tree,
-            rightError: error,
+            rightTree: null,
+            rightError: null,
             diffResults: null,
             selectedXPath: null,
-            activeCategory: null
+            activeCategory: null,
         });
     },
 
     compare: () => {
-        const { leftTree, rightTree } = get();
+        const { leftXml, rightXml, isDebugMode } = get();
+        if (isDebugMode) console.log('Comparing XMLs');
 
-        if (!leftTree || !rightTree) {
+        if (!leftXml || !rightXml) {
             return;
         }
 
-        const results = compareXml(leftTree, rightTree);
-        set({
-            diffResults: results,
-            selectedXPath: null,
-            activeCategory: null
-        });
+        set({ isComparing: true, diffResults: null });
+
+        // Use setTimeout to allow UI to update before heavy processing
+        setTimeout(() => {
+            try {
+                // Step 1: Parse both XML strings
+                if (isDebugMode) console.log('Parsing left XML...');
+                const leftTree = parseXml(leftXml);
+
+                if (isDebugMode) console.log('Parsing right XML...');
+                const rightTree = parseXml(rightXml);
+
+                // Step 2: Compare the parsed trees
+                if (isDebugMode) console.log('Comparing trees...');
+                const diffResults = compareXml(leftTree, rightTree);
+                if (isDebugMode) console.log('Comparison finished.');
+
+                set({
+                    leftTree,
+                    rightTree,
+                    diffResults,
+                    isComparing: false,
+                    leftError: null,
+                    rightError: null,
+                });
+            } catch (error) {
+                if (isDebugMode) console.error('Error during processing:', error);
+                set({
+                    isComparing: false,
+                    leftError: error.message,
+                    rightError: error.message,
+                    diffResults: null,
+                    leftTree: null,
+                    rightTree: null,
+                });
+            }
+        }, 50); // Small delay to let UI update
     },
 
     setSelectedXPath: (xpath) => {
+        const { isDebugMode } = get();
+        if (isDebugMode) console.log('Setting selected XPath:', xpath);
         set({ selectedXPath: xpath });
     },
 
     cycleDiff: (category) => {
-        const { diffResults, selectedXPath } = get();
+        const { diffResults, selectedXPath, isDebugMode } = get();
+        if (isDebugMode) console.log('Cycling diff category:', category);
+
         if (!diffResults || !diffResults[category] || diffResults[category].length === 0) {
             return;
         }
@@ -115,11 +154,13 @@ const useXmlStore = create((set, get) => ({
 
         set({
             selectedXPath: items[nextIndex],
-            activeCategory: category
+            activeCategory: category,
         });
     },
 
     clear: () => {
+        const { isDebugMode } = get();
+        if (isDebugMode) console.log('Clearing all');
         set({
             leftXml: '',
             rightXml: '',

@@ -3,22 +3,29 @@
  * Recursive tree node for XML visualization with diff highlighting
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { getDiffStatus } from '../utils/xmlComparer';
 import { findNodeByXPath } from '../utils/xmlParser';
 import { TREE_VIEW_COLORS } from '../utils/colorConfig';
 import useXmlStore from '../store/useXmlStore';
 
-export default function XmlTreeNode({ node, side, depth = 0 }) {
-    const [expanded, setExpanded] = useState(true);
+// Performance optimization: collapse nodes deeper than this level by default
+const AUTO_COLLAPSE_DEPTH = 3;
+
+const XmlTreeNode = memo(function XmlTreeNode({ node, side, depth = 0 }) {
+    // Start collapsed if depth > AUTO_COLLAPSE_DEPTH to improve performance with large files
+    const [expanded, setExpanded] = useState(depth < AUTO_COLLAPSE_DEPTH);
     const elementRef = useRef(null);
-    const { diffResults, selectedXPath, setSelectedXPath, fontSize, leftTree, rightTree } = useXmlStore();
+    const { diffResults, selectedXPath, setSelectedXPath, fontSize, leftTree, rightTree, showBorders, isDebugMode } = useXmlStore();
+
+    if (isDebugMode) console.log(`Rendering node: ${node.xpath}`, { depth, side, node });
 
     // Determine the 'other' tree for comparison
     const otherTree = side === 'left' ? rightTree : leftTree;
 
     const hasChildren = node.children && node.children.length > 0;
     const status = getDiffStatus(node.xpath, diffResults, side);
+    if (isDebugMode && status !== 'neutral') console.log(`Node ${node.xpath} status: ${status}`);
 
     // Get the counterpart node to check specific differences (attributes vs text)
     let otherNode = null;
@@ -32,18 +39,22 @@ export default function XmlTreeNode({ node, side, depth = 0 }) {
             // Check Text
             if (node.textContent !== otherNode.textContent) {
                 textChanged = true;
+                if (isDebugMode) console.log(`Text changed for ${node.xpath}`);
             }
             // Check Attributes
             const allKeys = new Set([...Object.keys(node.attributes), ...Object.keys(otherNode.attributes)]);
             allKeys.forEach(key => {
                 if (node.attributes[key] !== otherNode.attributes[key]) {
                     attributesChanged[key] = true;
+                    if (isDebugMode) console.log(`Attribute '${key}' changed for ${node.xpath}`);
                 }
             });
         }
     }
 
     const isSelected = selectedXPath === node.xpath;
+    const maxDepth = 50;
+    const indentation = Math.min(depth, maxDepth) * (fontSize * 1.2);
 
     // Auto-expand if this node is a parent of the selected node
     useEffect(() => {
@@ -76,12 +87,13 @@ export default function XmlTreeNode({ node, side, depth = 0 }) {
             <div
                 ref={elementRef}
                 className={`
-          flex items-center gap-1 py-1 px-2 rounded-md border cursor-pointer
+          flex items-center gap-1 py-1 px-2 rounded-md cursor-pointer
           transition-all duration-150 relative
+          ${showBorders ? 'border' : ''}
           ${colorClass}
           ${isSelected ? 'ring-2 ring-blue-500 shadow-lg z-10 scale-[1.02]' : 'hover:shadow-md hover:scale-[1.01]'}
         `}
-                style={{ marginLeft: `${depth * (fontSize * 1.2)}px` }}
+                style={{ marginLeft: `${indentation}px` }}
                 onClick={() => setSelectedXPath(node.xpath)}
             >
                 {/* Expand/Collapse toggle */}
@@ -118,8 +130,8 @@ export default function XmlTreeNode({ node, side, depth = 0 }) {
                 <span className="text-blue-600 font-semibold">&gt;</span>
 
                 {/* Text content (if leaf node or has direct text) */}
-                {node.textContent && !hasChildren && (
-                    <span className={`ml-1 truncate max-w-xs ${textChanged
+                {node.textContent && (
+                    <span className={`ml-1 ${textChanged
                         ? TREE_VIEW_COLORS.textContent.changed
                         : TREE_VIEW_COLORS.textContent.normal
                         }`}>
@@ -129,6 +141,10 @@ export default function XmlTreeNode({ node, side, depth = 0 }) {
 
                 {/* Closing tag for leaf nodes */}
                 {!hasChildren && (
+                    <span className="text-blue-600 font-semibold">&lt;/{node.tagName}&gt;</span>
+                )}
+                {/* Closing tag for non-leaf nodes with text content */}
+                {hasChildren && node.textContent && (
                     <span className="text-blue-600 font-semibold">&lt;/{node.tagName}&gt;</span>
                 )}
 
@@ -143,7 +159,7 @@ export default function XmlTreeNode({ node, side, depth = 0 }) {
 
             {/* Children */}
             {hasChildren && expanded && (
-                <div className="ml-2 border-l-2 border-slate-200/50">
+                <div className={`ml-2 ${showBorders ? 'border-l-2 border-slate-200/50' : ''}`}>
                     {node.children.map((child, index) => (
                         <XmlTreeNode
                             key={child.xpath + index}
@@ -155,7 +171,7 @@ export default function XmlTreeNode({ node, side, depth = 0 }) {
                     {/* Closing tag */}
                     <div
                         className="text-blue-600 font-mono py-0.5 px-2 opacity-50"
-                        style={{ marginLeft: `${(depth + 1) * (fontSize * 1.2)}px`, fontSize: `${fontSize}px` }}
+                        style={{ marginLeft: `${Math.min(depth + 1, maxDepth) * (fontSize * 1.2)}px`, fontSize: `${fontSize}px` }}
                     >
                         &lt;/{node.tagName}&gt;
                     </div>
@@ -163,4 +179,6 @@ export default function XmlTreeNode({ node, side, depth = 0 }) {
             )}
         </div>
     );
-}
+});
+
+export default XmlTreeNode;

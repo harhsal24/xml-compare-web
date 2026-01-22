@@ -141,11 +141,11 @@ export default function XmlPanel({ side, title }) {
 
                 {/* Tree View */}
                 {viewMode === 'tree' && (
-                    <div className="flex-1 p-4 overflow-auto bg-gradient-to-b from-slate-50 to-white">
+                    <div className="flex-1 bg-gradient-to-b from-slate-50 to-white relative min-h-0">
                         {tree ? (
                             <XmlTreeNode node={tree} side={side} />
                         ) : (
-                            <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-3">
+                            <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-3 p-4">
                                 <div className="text-4xl opacity-20">🌳</div>
                                 <p>No XML parsed yet.</p>
                                 <button
@@ -166,8 +166,8 @@ export default function XmlPanel({ side, title }) {
 
                 {/* XPath Display (Floating Footer) */}
                 {selectedXPath && tree && viewMode === 'tree' && (
-                    <div className="absolute bottom-0 left-0 right-0 px-4 py-2 bg-slate-800/95 backdrop-blur text-slate-200 text-xs font-mono border-t border-slate-700 shadow-lg z-20">
-                        <span className="text-slate-400 font-semibold select-none">XPath:</span> <span className="text-emerald-400">{selectedXPath}</span>
+                    <div className="absolute bottom-0 left-0 right-0 px-4 py-2 bg-slate-800/95 backdrop-blur text-slate-200 text-xs font-mono border-t border-slate-700 shadow-lg z-20 overflow-x-auto whitespace-nowrap scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent">
+                        <span className="text-slate-400 font-semibold select-none mr-2">XPath:</span><span className="text-emerald-400">{selectedXPath}</span>
                     </div>
                 )}
             </div>

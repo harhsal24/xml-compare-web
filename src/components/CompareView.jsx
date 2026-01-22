@@ -10,9 +10,10 @@ import useXmlStore from '../store/useXmlStore';
 
 export default function CompareView() {
     const {
-        leftTree, rightTree, diffResults,
+        leftTree, rightTree, diffResults, isComparing,
         compare, clear, cycleDiff, activeCategory,
-        fontSize, setFontSize, isZenMode, toggleZenMode
+        fontSize, setFontSize, isZenMode, toggleZenMode,
+        showBorders, toggleBorders, isDebugMode, toggleDebugMode
     } = useXmlStore();
 
     const [leftPanelWidth, setLeftPanelWidth] = useState(50); // Percentage
@@ -23,6 +24,7 @@ export default function CompareView() {
 
     // Handle Dragging for Resizing
     useEffect(() => {
+        if (isDebugMode) console.log('CompareView mounted');
         const handleMouseMove = (e) => {
             if (!isDragging.current || !containerRef.current) return;
 
@@ -45,10 +47,11 @@ export default function CompareView() {
         document.addEventListener('mouseup', handleMouseUp);
 
         return () => {
+            if (isDebugMode) console.log('CompareView unmounted');
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
         };
-    }, []);
+    }, [isDebugMode]);
 
     const startDrag = () => {
         isDragging.current = true;
@@ -58,18 +61,19 @@ export default function CompareView() {
 
     return (
         <div className={`flex flex-col h-full gap-4 ${isZenMode ? 'p-2 h-screen' : ''}`}>
-            {/* Action Bar - Hide in Zen Mode unless hovered or minimal? Actually user said "purely UI no drop down", so maybe hide completely or show small trigger */}
+            {/* Action Bar */}
             {!isZenMode && (
                 <div className="flex items-center justify-between flex-wrap gap-4">
                     <DiffLegend />
 
                     <div className="flex items-center gap-4">
-                        {/* View Controls */}
+                        {/* Settings */}
                         <div className="flex items-center gap-2 bg-slate-800/50 p-1.5 rounded-lg border border-slate-600/30">
-                            <span className="text-slate-400 text-xs font-semibold px-2">SIZE</span>
+                            <span className="text-slate-400 text-xs font-semibold px-2">SETTINGS</span>
                             <button
                                 onClick={() => setFontSize(Math.max(10, fontSize - 2))}
                                 className="w-8 h-8 flex items-center justify-center rounded hover:bg-slate-700 text-slate-300 transition-colors"
+                                title="Decrease font size"
                             >
                                 A-
                             </button>
@@ -77,8 +81,23 @@ export default function CompareView() {
                             <button
                                 onClick={() => setFontSize(Math.min(32, fontSize + 2))}
                                 className="w-8 h-8 flex items-center justify-center rounded hover:bg-slate-700 text-slate-300 transition-colors"
+                                title="Increase font size"
                             >
                                 A+
+                            </button>
+                            <button
+                                onClick={toggleBorders}
+                                className={`w-8 h-8 flex items-center justify-center rounded hover:bg-slate-700 text-slate-300 transition-colors ${!showBorders && 'opacity-50'}`}
+                                title="Toggle Borders"
+                            >
+                                B
+                            </button>
+                            <button
+                                onClick={toggleDebugMode}
+                                className={`w-8 h-8 flex items-center justify-center rounded hover:bg-slate-700 text-slate-300 transition-colors ${!isDebugMode && 'opacity-50'}`}
+                                title="Toggle Debug Mode"
+                            >
+                                D
                             </button>
                         </div>
 
@@ -95,19 +114,31 @@ export default function CompareView() {
 
                         <div className="flex gap-3 ml-2">
                             <button
-                                onClick={compare}
-                                disabled={!canCompare}
+                                onClick={() => {
+                                    if (isDebugMode) console.log('Compare button clicked');
+                                    compare();
+                                }}
+                                disabled={isComparing}
                                 className={`
                   px-5 py-2 rounded-xl font-semibold text-white shadow-lg
                   transition-all duration-200 flex items-center gap-2
-                  ${canCompare
-                                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl hover:-translate-y-0.5'
-                                        : 'bg-slate-500/50 cursor-not-allowed opacity-70'
+                  ${isComparing
+                                        ? 'bg-slate-500/50 cursor-not-allowed opacity-70'
+                                        : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl hover:-translate-y-0.5'
                                     }
                 `}
                             >
-                                <span className="text-lg">🔍</span>
-                                Compare
+                                {isComparing ? (
+                                    <>
+                                        <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                                        Comparing...
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="text-lg">🔍</span>
+                                        Compare
+                                    </>
+                                )}
                             </button>
 
                             <button
@@ -138,6 +169,13 @@ export default function CompareView() {
                         >
                             +
                         </button>
+                        <button
+                            onClick={toggleBorders}
+                            className={`w-8 h-8 flex items-center justify-center rounded hover:bg-slate-700 text-slate-300 transition-colors ${!showBorders && 'opacity-50'}`}
+                            title="Toggle Borders"
+                        >
+                            B
+                        </button>
                         <div className="w-px h-4 bg-slate-700 mx-1"></div>
                         <button
                             onClick={toggleZenMode}
@@ -149,84 +187,27 @@ export default function CompareView() {
                 </div>
             )}
 
-            {/* Statistics & Navigation (Hide in Zen Mode? User said "purely UI", maybe keep matches?) 
-                Let's keep it but make it more compact or hide if user wants "pure". 
-                For now, I'll hide it in Zen Mode to match "purely UI no drop down".
-             */}
-            {!isZenMode && diffResults && (
-                <div className="flex flex-wrap gap-3 justify-center p-3 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white backdrop-blur-sm">
-                    <div className="flex items-center gap-3 px-3 border-r border-slate-600/50">
-                        <StatBadge label="Total Left" value={diffResults.stats.totalLeft} color="blue" />
-                        <StatBadge label="Total Right" value={diffResults.stats.totalRight} color="blue" />
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                        <StatButton
-                            label="Matched"
-                            value={diffResults.stats.matched}
-                            color="green"
-                            onClick={() => cycleDiff('matched')}
-                            isActive={activeCategory === 'matched'}
-                            icon="✓"
-                        />
-                        <StatButton
-                            label="Left Only"
-                            value={diffResults.stats.leftOnly}
-                            color="amber"
-                            onClick={() => cycleDiff('leftOnly')}
-                            isActive={activeCategory === 'leftOnly'}
-                            icon="←"
-                        />
-                        <StatButton
-                            label="Right Only"
-                            value={diffResults.stats.rightOnly}
-                            color="amber"
-                            onClick={() => cycleDiff('rightOnly')}
-                            isActive={activeCategory === 'rightOnly'}
-                            icon="→"
-                        />
-                        <StatButton
-                            label="Different"
-                            value={diffResults.stats.different}
-                            color="purple"
-                            onClick={() => cycleDiff('different')}
-                            isActive={activeCategory === 'different'}
-                            icon="≠"
-                        />
-                    </div>
-                </div>
-            )}
-
-            {/* Resizable Side-by-side Panels */}
-            {/* We use specific width logic instead of grid */}
+            {/* Panels Container */}
             <div
                 ref={containerRef}
-                className={`flex-1 flex flex-row min-h-0 relative ${isZenMode ? 'gap-0' : 'gap-0'} w-full overflow-hidden`}
+                className="flex-1 flex gap-0 min-h-0"
             >
                 {/* Left Panel */}
-                <div style={{ width: `${leftPanelWidth}%` }} className="flex flex-col min-w-[20%]">
-                    <XmlPanel side="left" title="Left XML" isZenMode={isZenMode} />
+                <div style={{ width: `${leftPanelWidth}%` }} className="min-w-0">
+                    <XmlPanel side="left" title="Left XML" />
                 </div>
 
                 {/* Resizer Handle */}
                 <div
                     onMouseDown={startDrag}
-                    className={`
-                        w-1.5 hover:w-3 z-10 -ml-0.5 -mr-0.5 cursor-col-resize flex flex-col justify-center items-center group
-                        transition-all duration-150 select-none
-                    `}
+                    className="w-2 bg-slate-700 hover:bg-blue-500 cursor-col-resize flex items-center justify-center transition-colors group"
                 >
-                    <div className="w-0.5 h-full bg-slate-600 group-hover:bg-blue-500 transition-colors"></div>
-                    <div className="absolute top-1/2 -translate-y-1/2 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="w-4 h-8 bg-slate-700 rounded flex items-center justify-center border border-slate-500">
-                            <span className="text-white text-[10px]">||</span>
-                        </div>
-                    </div>
+                    <div className="w-0.5 h-8 bg-slate-500 group-hover:bg-white rounded-full transition-colors"></div>
                 </div>
 
                 {/* Right Panel */}
-                <div className="flex-1 flex flex-col min-w-[20%]">
-                    <XmlPanel side="right" title="Right XML" isZenMode={isZenMode} />
+                <div style={{ width: `${100 - leftPanelWidth}%` }} className="min-w-0">
+                    <XmlPanel side="right" title="Right XML" />
                 </div>
             </div>
         </div>
@@ -291,3 +272,4 @@ function StatButton({ label, value, color, onClick, isActive, icon }) {
         </button>
     );
 }
+
