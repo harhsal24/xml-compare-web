@@ -121,8 +121,14 @@ const XmlTreeNode = memo(function XmlTreeNode({ node, side, depth = 0 }) {
                     showLeafDots && <span className="w-5 h-5 flex items-center justify-center text-slate-400">•</span>
                 )}
 
-                {/* Element tag */}
-                <span className="text-blue-600 font-semibold">&lt;{node.tagName}</span>
+                <span className="text-blue-600 font-semibold">
+                    &lt;{node.tagName}
+                    {node.siblingTotal > 1 && (
+                        <span className="text-yellow-600 text-xs font-normal ml-0.5">
+                            {node.siblingIndex}/{node.siblingTotal}
+                        </span>
+                    )}
+                </span>
 
                 {/* Attributes - with individual highlighting */}
                 {attrsDisplay.length > 0 && (

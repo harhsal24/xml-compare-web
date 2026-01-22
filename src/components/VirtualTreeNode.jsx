@@ -56,6 +56,9 @@ const VirtualTreeNode = memo(({
     const isSelected = selectedXPath === node.xpath;
     const indentation = depth * (fontSize * 1.2);
 
+    // DEBUG: Log sibling info for ALL nodes to diagnose
+    console.log(`[TreeNode] ${node.tagName}: siblingIndex=${node.siblingIndex}, siblingTotal=${node.siblingTotal}, hasIndex=${node.siblingIndex !== undefined}, keys=${Object.keys(node).join(',')}`);
+
     // Get color class from config
     const isNoneStyle = treeViewStyle === 'none';
     const colorClass = isNoneStyle ? '' : (TREE_VIEW_COLORS.status[status] || TREE_VIEW_COLORS.status.neutral);
@@ -99,8 +102,15 @@ const VirtualTreeNode = memo(({
 
                 {/* Content Container */}
                 <div className="flex items-center flex-wrap gap-x-1 overflow-hidden">
-                    {/* Element tag */}
-                    <span className="text-blue-600 font-semibold text-nowrap">&lt;{node.tagName}</span>
+                    {/* Element tag with sibling index */}
+                    <span className="text-blue-600 font-semibold text-nowrap">
+                        &lt;{node.tagName}
+                        {node.siblingTotal > 1 && (
+                            <span className="text-yellow-600 text-xs font-normal ml-0.5">
+                                {node.siblingIndex}/{node.siblingTotal}
+                            </span>
+                        )}
+                    </span>
 
                     {/* Attributes */}
                     {attrsDisplay.length > 0 && (

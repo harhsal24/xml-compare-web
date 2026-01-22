@@ -45,3 +45,12 @@ when we change that in zen mode and there is no need to specify left xml and rig
    file which is long horizontally
    3) calculate the vertical scroll based on 
    file which is long vertically
+
+
+
+   I want to show  the index of element 
+if a parent have mutiple childrean with same name 
+i want it like <element>2/5 
+where 2 is its index from similar 5 sibliings 
+i dont want to see 1/1
+i only want it if we have same mutiple more than 1 

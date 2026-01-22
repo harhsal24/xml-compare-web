@@ -31,6 +31,8 @@
  * @property {string} textContent - Direct text content (not from children)
  * @property {XmlNode[]} children - Child element nodes
  * @property {string} key - Unique identifier for comparison purposes
+ * @property {number} siblingIndex - 1-based index among siblings with same tag name
+ * @property {number} siblingTotal - Total count of siblings with same tag name
  */
 
 /**
@@ -195,6 +197,16 @@ function buildTreeFromElement(element, parentPath) {
     // Calculate XPath for this element
     const xpath = calculateXPath(element, parentPath);
 
+    // Calculate sibling index and total for display
+    const siblings = findSameSiblings(element);
+    const siblingTotal = siblings.length;
+    const siblingIndex = siblings.indexOf(element) + 1; // 1-based index
+
+    // DEBUG: Log sibling info for elements with multiple siblings
+    if (siblingTotal > 1) {
+        console.log(`[Parser] ${tagName}: siblingIndex=${siblingIndex}, siblingTotal=${siblingTotal}`);
+    }
+
     // Extract attributes
     const attributes = extractAttributes(element);
 
@@ -214,6 +226,8 @@ function buildTreeFromElement(element, parentPath) {
         textContent,
         children,
         key,
+        siblingIndex,
+        siblingTotal,
     };
 }
 
