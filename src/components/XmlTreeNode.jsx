@@ -16,16 +16,30 @@ const XmlTreeNode = memo(function XmlTreeNode({ node, side, depth = 0 }) {
     // Start collapsed if depth > AUTO_COLLAPSE_DEPTH to improve performance with large files
     const [expanded, setExpanded] = useState(depth < AUTO_COLLAPSE_DEPTH);
     const elementRef = useRef(null);
-    const { diffResults, selectedXPath, setSelectedXPath, fontSize, leftTree, rightTree, showBorders, isDebugMode } = useXmlStore();
+    const {
+        diffResults,
+        selectedXPath,
+        setSelectedXPath,
+        fontSize,
+        leftTree,
+        rightTree,
+        showBorders,
+        showLeafDots,
+        showStatusBadges,
+        isDebugMode
+    } = useXmlStore();
 
-    if (isDebugMode) console.log(`Rendering node: ${node.xpath}`, { depth, side, node });
+    if (isDebugMode) {
+        console.log(`Rendering node: ${node.xpath}`, {
+            depth, side, showBorders, showLeafDots, showStatusBadges
+        });
+    }
 
     // Determine the 'other' tree for comparison
     const otherTree = side === 'left' ? rightTree : leftTree;
 
     const hasChildren = node.children && node.children.length > 0;
     const status = getDiffStatus(node.xpath, diffResults, side);
-    if (isDebugMode && status !== 'neutral') console.log(`Node ${node.xpath} status: ${status}`);
 
     // Get the counterpart node to check specific differences (attributes vs text)
     let otherNode = null;
@@ -39,14 +53,12 @@ const XmlTreeNode = memo(function XmlTreeNode({ node, side, depth = 0 }) {
             // Check Text
             if (node.textContent !== otherNode.textContent) {
                 textChanged = true;
-                if (isDebugMode) console.log(`Text changed for ${node.xpath}`);
             }
             // Check Attributes
             const allKeys = new Set([...Object.keys(node.attributes), ...Object.keys(otherNode.attributes)]);
             allKeys.forEach(key => {
                 if (node.attributes[key] !== otherNode.attributes[key]) {
                     attributesChanged[key] = true;
-                    if (isDebugMode) console.log(`Attribute '${key}' changed for ${node.xpath}`);
                 }
             });
         }
@@ -105,7 +117,8 @@ const XmlTreeNode = memo(function XmlTreeNode({ node, side, depth = 0 }) {
                         {expanded ? '▼' : '▶'}
                     </button>
                 ) : (
-                    <span className="w-5 h-5 flex items-center justify-center text-slate-400">•</span>
+                    // Only show dot if showLeafDots is true
+                    showLeafDots && <span className="w-5 h-5 flex items-center justify-center text-slate-400">•</span>
                 )}
 
                 {/* Element tag */}
@@ -148,8 +161,8 @@ const XmlTreeNode = memo(function XmlTreeNode({ node, side, depth = 0 }) {
                     <span className="text-blue-600 font-semibold">&lt;/{node.tagName}&gt;</span>
                 )}
 
-                {/* Status badge */}
-                {status !== 'neutral' && diffResults && (
+                {/* Status badge - Only show if showStatusBadges is true */}
+                {status !== 'neutral' && diffResults && showStatusBadges && (
                     <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide ${TREE_VIEW_COLORS.badge[status] || TREE_VIEW_COLORS.badge.missing
                         }`}>
                         {status}
@@ -159,7 +172,8 @@ const XmlTreeNode = memo(function XmlTreeNode({ node, side, depth = 0 }) {
 
             {/* Children */}
             {hasChildren && expanded && (
-                <div className={`ml-2 ${showBorders ? 'border-l-2 border-slate-200/50' : ''}`}>
+                // ALWAYS show the vertical line (border-l-2) regardless of showBorders, as requested
+                <div className={`ml-2 border-l-2 border-slate-200/50`}>
                     {node.children.map((child, index) => (
                         <XmlTreeNode
                             key={child.xpath + index}

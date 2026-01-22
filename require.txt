@@ -27,3 +27,15 @@ when we change that in zen mode and there is no need to specify left xml and rig
 2) show folder icon to show upload in zen mode
 3) update the setting bar in zen mode
  remove the pill message that says user arrow key to navigate thats it 
+
+
+
+
+ 1) select legend is not working and navigate is also not working  ,
+ 2) setting bar 
+      1) Toogle borders is working with it is also removing vertical lines 
+      that shows the element and its area 
+      2)toogle tree style is not working  so remove that icon and its code
+      3)toogle leaf dot its not working
+      4)toogle status badge is not working
+3) add compare button in zen mode in right panel heder in the middle

@@ -11,14 +11,15 @@ export default function DiffLegend({ compact = false }) {
     const { activeCategory, navigateDiff } = useXmlStore();
 
     const handleLegendClick = (category) => {
+        // Set active category and navigate to first item
         navigateDiff(category, 'next');
     };
 
     const getActiveClass = (category) => {
-        const base = activeCategory === category
-            ? 'ring-2 ring-blue-500 bg-blue-100'
-            : 'hover:bg-white/20 cursor-pointer';
-        return base;
+        const isActive = activeCategory === category;
+        return isActive
+            ? 'ring-2 ring-blue-500 scale-110'
+            : 'hover:scale-105 cursor-pointer opacity-80 hover:opacity-100';
     };
 
     // Compact mode - small circular badges with initials
@@ -33,13 +34,21 @@ export default function DiffLegend({ compact = false }) {
                 >
                     M
                 </button>
-                {/* Extra */}
+                {/* Left Only (Extra in left) */}
                 <button
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white transition-all ${getActiveClass('extra')} ${LEGEND_COLORS.extra}`}
-                    onClick={() => handleLegendClick('extra')}
-                    title="Extra - Click to navigate"
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white transition-all ${getActiveClass('leftOnly')} ${LEGEND_COLORS.extra}`}
+                    onClick={() => handleLegendClick('leftOnly')}
+                    title="Left Only - Click to navigate"
                 >
-                    E
+                    L
+                </button>
+                {/* Right Only (Extra in right) */}
+                <button
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white transition-all ${getActiveClass('rightOnly')} ${LEGEND_COLORS.extra}`}
+                    onClick={() => handleLegendClick('rightOnly')}
+                    title="Right Only - Click to navigate"
+                >
+                    R
                 </button>
                 {/* Different */}
                 <button
@@ -57,7 +66,7 @@ export default function DiffLegend({ compact = false }) {
     return (
         <div className="flex items-center gap-3 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm text-xs font-medium text-slate-600 flex-wrap">
             <div
-                className={`flex items-center gap-1.5 px-2 py-1 rounded transition-all ${getActiveClass('matched')}`}
+                className={`flex items-center gap-1.5 px-2 py-1 rounded transition-all cursor-pointer ${getActiveClass('matched')}`}
                 onClick={() => handleLegendClick('matched')}
                 title="Navigate Matched Nodes"
             >
@@ -65,15 +74,23 @@ export default function DiffLegend({ compact = false }) {
                 <span>Matched</span>
             </div>
             <div
-                className={`flex items-center gap-1.5 px-2 py-1 rounded transition-all ${getActiveClass('extra')}`}
-                onClick={() => handleLegendClick('extra')}
-                title="Navigate Extra Nodes"
+                className={`flex items-center gap-1.5 px-2 py-1 rounded transition-all cursor-pointer ${getActiveClass('leftOnly')}`}
+                onClick={() => handleLegendClick('leftOnly')}
+                title="Navigate Left Only Nodes"
             >
                 <span className={`w-2.5 h-2.5 rounded-full ${LEGEND_COLORS.extra}`}></span>
-                <span>Extra</span>
+                <span>Left Only</span>
             </div>
             <div
-                className={`flex items-center gap-1.5 px-2 py-1 rounded transition-all ${getActiveClass('different')}`}
+                className={`flex items-center gap-1.5 px-2 py-1 rounded transition-all cursor-pointer ${getActiveClass('rightOnly')}`}
+                onClick={() => handleLegendClick('rightOnly')}
+                title="Navigate Right Only Nodes"
+            >
+                <span className={`w-2.5 h-2.5 rounded-full ${LEGEND_COLORS.extra}`}></span>
+                <span>Right Only</span>
+            </div>
+            <div
+                className={`flex items-center gap-1.5 px-2 py-1 rounded transition-all cursor-pointer ${getActiveClass('different')}`}
                 onClick={() => handleLegendClick('different')}
                 title="Navigate Different Nodes"
             >

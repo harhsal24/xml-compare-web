@@ -13,8 +13,8 @@ export default function CompareView() {
         leftTree, rightTree, diffResults, isComparing,
         compare, clear, activeCategory, navigateDiff,
         fontSize, setFontSize, isZenMode, toggleZenMode,
-        showBorders, toggleBorders, treeViewStyle, setTreeViewStyle,
-        toggleLeafDots, toggleStatusBadges, showLeafDots, showStatusBadges
+        showBorders, toggleBorders,
+        toggleLeafDots, showLeafDots, toggleStatusBadges, showStatusBadges
     } = useXmlStore();
 
     const [leftPanelWidth, setLeftPanelWidth] = useState(50); // Percentage
@@ -106,6 +106,21 @@ export default function CompareView() {
     // Settings Controls Component (for Zen mode)
     const SettingsControls = () => (
         <div className="flex items-center gap-1 shrink-0">
+            {/* Compare Button */}
+            <button
+                onClick={compare}
+                disabled={isComparing}
+                className={`px-3 py-1 rounded font-semibold text-white text-xs transition-all flex items-center gap-1 ${isComparing
+                    ? 'bg-slate-500/50 cursor-not-allowed opacity-70'
+                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
+                    }`}
+                title="Compare XMLs"
+            >
+                {isComparing ? '...' : '🔍 Compare'}
+            </button>
+
+            <div className="w-px h-4 bg-slate-600 mx-1"></div>
+
             {/* Font Size Controls */}
             <button
                 onClick={() => setFontSize(Math.max(10, fontSize - 2))}
@@ -125,7 +140,7 @@ export default function CompareView() {
 
             <div className="w-px h-4 bg-slate-600 mx-1"></div>
 
-            {/* Toggle Borders */}
+            {/* Visual Toggles */}
             <button
                 onClick={toggleBorders}
                 className={`w-6 h-6 flex items-center justify-center rounded bg-slate-600 hover:bg-slate-500 text-white text-xs transition-colors ${!showBorders && 'opacity-50'}`}
@@ -133,19 +148,6 @@ export default function CompareView() {
             >
                 B
             </button>
-
-            {/* Toggle Tree Style */}
-            <button
-                onClick={() => setTreeViewStyle(treeViewStyle === 'default' ? 'none' : 'default')}
-                className={`w-6 h-6 flex items-center justify-center rounded bg-slate-600 hover:bg-slate-500 text-white transition-colors ${treeViewStyle === 'none' ? 'text-blue-400' : ''}`}
-                title="Toggle Tree Style (Default/None)"
-            >
-                {treeViewStyle === 'default' ? '🎨' : '👁️'}
-            </button>
-
-            <div className="w-px h-4 bg-slate-600 mx-1"></div>
-
-            {/* Toggle Leaf Dots */}
             <button
                 onClick={toggleLeafDots}
                 className={`w-6 h-6 flex items-center justify-center rounded bg-slate-600 hover:bg-slate-500 text-white text-xs transition-colors ${!showLeafDots && 'opacity-50'}`}
@@ -153,11 +155,9 @@ export default function CompareView() {
             >
                 •
             </button>
-
-            {/* Toggle Status Badges */}
             <button
                 onClick={toggleStatusBadges}
-                className={`w-6 h-6 flex items-center justify-center rounded bg-slate-600 hover:bg-slate-500 text-white transition-colors ${!showStatusBadges && 'opacity-50'}`}
+                className={`w-6 h-6 flex items-center justify-center rounded bg-slate-600 hover:bg-slate-500 text-white text-xs transition-colors ${!showStatusBadges && 'opacity-50'}`}
                 title="Toggle Status Badges"
             >
                 🏷️
@@ -211,13 +211,6 @@ export default function CompareView() {
                                 title="Toggle Borders"
                             >
                                 B
-                            </button>
-                            <button
-                                onClick={() => setTreeViewStyle(treeViewStyle === 'default' ? 'none' : 'default')}
-                                className={`w-8 h-8 flex items-center justify-center rounded hover:bg-slate-700 text-slate-300 transition-colors ${treeViewStyle === 'none' ? 'text-blue-400' : ''}`}
-                                title="Toggle Tree Style (Default/None)"
-                            >
-                                {treeViewStyle === 'default' ? '🎨' : '👁️'}
                             </button>
                             <div className="h-4 w-px bg-slate-700 mx-1"></div>
                             <button

@@ -38,7 +38,7 @@ const useXmlStore = create((set, get) => ({
     fontSize: 14,
     isZenMode: false,
     showBorders: true,
-    treeViewStyle: 'default', // 'default' | 'none'
+    // treeViewStyle removed as per user request
     showLeafDots: true,
     showStatusBadges: true,
 
@@ -48,25 +48,27 @@ const useXmlStore = create((set, get) => ({
     },
 
     toggleZenMode: () => {
-        if (DEBUG_MODE) console.log('Toggling zen mode');
-        set((state) => ({ isZenMode: !state.isZenMode }));
+        const { isZenMode } = get();
+        console.log('Toggling Zen Mode. New value:', !isZenMode);
+        set({ isZenMode: !isZenMode });
     },
 
     toggleBorders: () => {
-        if (DEBUG_MODE) console.log('Toggling borders');
-        set((state) => ({ showBorders: !state.showBorders }));
-    },
-
-    setTreeViewStyle: (style) => {
-        set({ treeViewStyle: style });
+        const { showBorders } = get();
+        console.log('Toggling Borders. New value:', !showBorders);
+        set({ showBorders: !showBorders });
     },
 
     toggleLeafDots: () => {
-        set((state) => ({ showLeafDots: !state.showLeafDots }));
+        const { showLeafDots } = get();
+        console.log('Toggling Leaf Dots. New value:', !showLeafDots);
+        set({ showLeafDots: !showLeafDots });
     },
 
     toggleStatusBadges: () => {
-        set((state) => ({ showStatusBadges: !state.showStatusBadges }));
+        const { showStatusBadges } = get();
+        console.log('Toggling Status Badges. New value:', !showStatusBadges);
+        set({ showStatusBadges: !showStatusBadges });
     },
 
     setLeftXml: (xml) => {
