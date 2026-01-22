@@ -95,12 +95,12 @@ const XmlTreeNode = memo(function XmlTreeNode({ node, side, depth = 0 }) {
     });
 
     return (
-        <div className="font-mono" style={{ fontSize: `${fontSize}px` }}>
+        <div className="font-mono min-w-fit" style={{ fontSize: `${fontSize}px` }}>
             <div
                 ref={elementRef}
                 className={`
           flex items-center gap-1 py-1 px-2 rounded-md cursor-pointer
-          transition-all duration-150 relative
+          transition-all duration-150 relative min-w-fit
           ${showBorders ? 'border' : ''}
           ${colorClass}
           ${isSelected ? 'ring-2 ring-blue-500 shadow-lg z-10 scale-[1.02]' : 'hover:shadow-md hover:scale-[1.01]'}
@@ -173,7 +173,7 @@ const XmlTreeNode = memo(function XmlTreeNode({ node, side, depth = 0 }) {
             {/* Children */}
             {hasChildren && expanded && (
                 // ALWAYS show the vertical line (border-l-2) regardless of showBorders, as requested
-                <div className={`ml-2 border-l-2 border-slate-200/50`}>
+                <div className={`ml-2 border-l-2 border-slate-200/50 min-w-fit`}>
                     {node.children.map((child, index) => (
                         <XmlTreeNode
                             key={child.xpath + index}
