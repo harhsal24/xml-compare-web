@@ -141,7 +141,7 @@ export default function XmlPanel({ side, title }) {
 
                 {/* Tree View */}
                 {viewMode === 'tree' && (
-                    <div className="flex-1 bg-gradient-to-b from-slate-50 to-white relative min-h-0">
+                    <div className="flex-1 bg-gradient-to-b from-slate-50 to-white relative min-h-0 overflow-auto p-4">
                         {tree ? (
                             <XmlTreeNode node={tree} side={side} />
                         ) : (
