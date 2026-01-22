@@ -66,6 +66,11 @@ const useXmlStore = create((set, get) => ({
     showLeafDots: true,
     showStatusBadges: true,
     isScrollLocked: false, // New state for scroll synchronization
+    lastFocusedSide: 'left', // 'left' or 'right'
+
+    setLastFocusedSide: (side) => {
+        set({ lastFocusedSide: side });
+    },
 
     setXpathSettings: (settings) => {
         const newSettings = { ...get().xpathSettings, ...settings };

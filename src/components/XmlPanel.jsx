@@ -30,7 +30,8 @@ export default function XmlPanel({ side, title, headerControls, syncViewMode, on
         leftTree, rightTree,
         leftError, rightError,
         setLeftXml, setRightXml,
-        selectedXPath, fontSize, isZenMode
+        selectedXPath, fontSize, isZenMode,
+        setLastFocusedSide
     } = useXmlStore();
 
     const xml = side === 'left' ? leftXml : rightXml;
@@ -59,7 +60,10 @@ export default function XmlPanel({ side, title, headerControls, syncViewMode, on
     };
 
     return (
-        <div className="flex flex-col h-full bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+        <div
+            className="flex flex-col h-full bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden"
+            onClick={() => setLastFocusedSide(side)}
+        >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-slate-800 to-slate-700 h-14 shrink-0">
                 <div className="flex items-center gap-3 overflow-hidden">

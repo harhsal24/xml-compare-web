@@ -1,0 +1,19 @@
+<root>
+    <section id="1">
+        <title>Introduction</title>
+        <content>This is the start.</content>
+    </section>
+    <!-- Section 2 is missing here -->
+    <section id="3">
+        <title>Conclusion</title>
+        <content>The end.</content>
+    </section>
+    <section id="4">
+        <title>Appendix</title>
+        <content>Extra content.</content>
+    </section>
+    <Extra_Right>
+        <title>Extra Right</title>
+        <content>Extra Right content.</content>
+    </Extra_Right>
+</root>

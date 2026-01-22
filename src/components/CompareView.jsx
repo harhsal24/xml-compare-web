@@ -7,6 +7,7 @@ import { useState, useRef, useEffect } from 'react';
 import XmlPanel from './XmlPanel';
 import DiffLegend from './DiffLegend';
 import useXmlStore from '../store/useXmlStore';
+import { useToast } from './Toast';
 
 export default function CompareView() {
     const {
@@ -15,8 +16,10 @@ export default function CompareView() {
         fontSize, setFontSize, isZenMode, toggleZenMode,
         showBorders, toggleBorders,
         toggleLeafDots, showLeafDots, toggleStatusBadges, showStatusBadges,
-        isScrollLocked, toggleScrollLock // Import scroll lock state
+        isScrollLocked, toggleScrollLock, // Import scroll lock state
+        setSelectedXPath // Import setSelectedXPath
     } = useXmlStore();
+    const { addToast } = useToast();
 
     const [leftPanelWidth, setLeftPanelWidth] = useState(50); // Percentage
     const [syncedViewMode, setSyncedViewMode] = useState('tree'); // Synced view mode for Zen mode
@@ -118,23 +121,47 @@ export default function CompareView() {
         };
     }, []);
 
-    // Keyboard Navigation
+    // Keyboard Navigation & Shortcuts
     useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (!activeCategory) return;
+        const handleKeyDown = async (e) => {
+            // Navigation
+            if (activeCategory) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    navigateDiff(activeCategory, 'next');
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    navigateDiff(activeCategory, 'prev');
+                }
+            }
 
-            if (e.key === 'ArrowDown') {
+            // Alt+F: Search XPath from clipboard
+            if (e.altKey && (e.key === 'f' || e.key === 'F')) {
                 e.preventDefault();
-                navigateDiff(activeCategory, 'next');
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                navigateDiff(activeCategory, 'prev');
+                try {
+                    const text = await navigator.clipboard.readText();
+                    if (!text) {
+                        addToast('Clipboard is empty', 'error');
+                        return;
+                    }
+
+                    // Basic validation strictly for XPath (starts with /)
+                    if (text.startsWith('/')) {
+                        setSelectedXPath(text);
+                        addToast(`Searching for: ${text}`, 'info');
+                    } else {
+                        addToast('Clipboard content is not a valid XPath', 'error');
+                    }
+                } catch (err) {
+                    console.error('Failed to read clipboard:', err);
+                    addToast('Failed to read clipboard. Please allow permission.', 'error');
+                }
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [activeCategory, navigateDiff]);
+    }, [activeCategory, navigateDiff, addToast, setSelectedXPath]);
 
     const startDrag = () => {
         isDragging.current = true;

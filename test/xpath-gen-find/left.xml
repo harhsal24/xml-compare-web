@@ -1,0 +1,18 @@
+<root>
+    <section id="1">
+        <title>Introduction</title>
+        <content>This is the start.</content>
+    </section>
+    <section id="2">
+        <title>Middle</title>
+        <content>This is the middle part.</content>
+    </section>
+    <section id="3">
+        <title>Conclusion</title>
+        <content>The end.</content>
+    </section>
+     <Extr_left>
+        <title>Extra left</title>
+        <content>Extra left content.</content>
+    </Extr_left>
+</root>

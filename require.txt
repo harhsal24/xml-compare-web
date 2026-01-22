@@ -58,3 +58,14 @@ i only want it if we have same mutiple more than 1
 
 I want a way to copy the value of the leaf node 
 can you copy the value if ctrl key is pressed and mouse click on leaf node 
+
+
+
+I want to add 2 features 
+where 
+1)when we have a extra element if a file we will leaf same amout of space in other file indicate a element suppose to be here 
+2) if user want to find a element he will  have a 
+xpath copied in his clipboard 
+if he pressed alt + f 
+we will get that copied value (if this is possible)
+and search in last focused panel 
