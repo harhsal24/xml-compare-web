@@ -44,14 +44,15 @@ const XmlTreeNode = memo(function XmlTreeNode({ node, side, depth = 0 }) {
     const status = getDiffStatus(node.xpath, diffResults, side);
 
     // Get the counterpart node to check specific differences (attributes vs text)
+    // IMPORTANT: Always try to find otherNode when otherTree exists - needed for placeholder alignment
     let otherNode = null;
     let textChanged = false;
     let attributesChanged = {}; // key -> boolean (true if changed)
 
-    if (status === 'different' && otherTree) {
+    if (otherTree) {
         otherNode = findNodeByXPath(otherTree, node.xpath);
 
-        if (otherNode) {
+        if (otherNode && status === 'different') {
             // Check Text
             if (node.textContent !== otherNode.textContent) {
                 textChanged = true;
