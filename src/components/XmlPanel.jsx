@@ -7,10 +7,12 @@ import { useRef, useState } from 'react';
 import XmlTreeNode from './XmlTreeNode';
 import XmlSyntaxView from './XmlSyntaxView';
 import useXmlStore from '../store/useXmlStore';
+import { useToast } from './Toast';
 
 export default function XmlPanel({ side, title, headerControls, syncViewMode, onViewModeChange, scrollRef }) {
     const fileInputRef = useRef(null);
     const [localViewMode, setLocalViewMode] = useState('tree'); // 'text' or 'tree'
+    const { addToast } = useToast();
 
     // Use synced view mode if provided, otherwise use local
     const viewMode = syncViewMode !== undefined ? syncViewMode : localViewMode;
@@ -196,10 +198,18 @@ export default function XmlPanel({ side, title, headerControls, syncViewMode, on
                     </div>
                 )}
 
-                {/* XPath Display (Floating Footer) */}
+                {/* XPath Display (Floating Footer) - Click to copy */}
                 {selectedXPath && tree && viewMode === 'tree' && (
-                    <div className="absolute bottom-0 left-0 right-0 px-4 py-2 bg-slate-800/95 backdrop-blur text-slate-200 text-xs font-mono border-t border-slate-700 shadow-lg z-20 overflow-x-auto whitespace-nowrap scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent">
+                    <div
+                        className="absolute bottom-0 left-0 right-0 px-4 py-2 bg-slate-800/95 backdrop-blur text-slate-200 text-xs font-mono border-t border-slate-700 shadow-lg z-20 overflow-x-auto whitespace-nowrap scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent cursor-pointer hover:bg-slate-700/95 transition-colors"
+                        onClick={() => {
+                            navigator.clipboard.writeText(selectedXPath);
+                            addToast(`Copied XPath: ${selectedXPath}`);
+                        }}
+                        title="Click to copy XPath"
+                    >
                         <span className="text-slate-400 font-semibold select-none mr-2">XPath:</span><span className="text-emerald-400">{selectedXPath}</span>
+                        <span className="ml-2 text-slate-500 text-[10px]">(click to copy)</span>
                     </div>
                 )}
             </div>
