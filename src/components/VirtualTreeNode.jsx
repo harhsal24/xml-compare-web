@@ -22,7 +22,8 @@ const VirtualTreeNode = memo(({
         leftTree,
         rightTree,
         showBorders,
-        isDebugMode
+        isDebugMode,
+        treeViewStyle
     } = useXmlStore();
 
     // Determine the 'other' tree for comparison
@@ -54,7 +55,9 @@ const VirtualTreeNode = memo(({
     const indentation = depth * (fontSize * 1.2);
 
     // Get color class from config
-    const colorClass = TREE_VIEW_COLORS.status[status] || TREE_VIEW_COLORS.status.neutral;
+    const isNoneStyle = treeViewStyle === 'none';
+    const colorClass = isNoneStyle ? '' : (TREE_VIEW_COLORS.status[status] || TREE_VIEW_COLORS.status.neutral);
+
 
     // Format attributes for display
     const attrsDisplay = Object.entries(node.attributes).map(([key, value]) => {
@@ -131,8 +134,8 @@ const VirtualTreeNode = memo(({
                     )}
                 </div>
 
-                {/* Status badge */}
-                {status !== 'neutral' && diffResults && (
+                {/* Status badge - Hide in 'none' style unless specific need, or keep it? User said "like view only mode" so maybe hide diff colors but keep structure. Let's hide the badge in none mode for cleaner look. */}
+                {status !== 'neutral' && diffResults && !isNoneStyle && (
                     <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide shrink-0 ${TREE_VIEW_COLORS.badge[status] || TREE_VIEW_COLORS.badge.missing
                         }`}>
                         {status}

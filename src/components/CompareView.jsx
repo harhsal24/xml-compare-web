@@ -11,9 +11,9 @@ import useXmlStore from '../store/useXmlStore';
 export default function CompareView() {
     const {
         leftTree, rightTree, diffResults, isComparing,
-        compare, clear, cycleDiff, activeCategory,
+        compare, clear, activeCategory, navigateDiff,
         fontSize, setFontSize, isZenMode, toggleZenMode,
-        showBorders, toggleBorders, isDebugMode, toggleDebugMode
+        showBorders, toggleBorders, treeViewStyle, setTreeViewStyle
     } = useXmlStore();
 
     const [leftPanelWidth, setLeftPanelWidth] = useState(50); // Percentage
@@ -24,7 +24,6 @@ export default function CompareView() {
 
     // Handle Dragging for Resizing
     useEffect(() => {
-        if (isDebugMode) console.log('CompareView mounted');
         const handleMouseMove = (e) => {
             if (!isDragging.current || !containerRef.current) return;
 
@@ -47,11 +46,28 @@ export default function CompareView() {
         document.addEventListener('mouseup', handleMouseUp);
 
         return () => {
-            if (isDebugMode) console.log('CompareView unmounted');
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
         };
-    }, [isDebugMode]);
+    }, []);
+
+    // Keyboard Navigation
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (!activeCategory) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                navigateDiff(activeCategory, 'next');
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                navigateDiff(activeCategory, 'prev');
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [activeCategory, navigateDiff]);
 
     const startDrag = () => {
         isDragging.current = true;
@@ -93,11 +109,11 @@ export default function CompareView() {
                                 B
                             </button>
                             <button
-                                onClick={toggleDebugMode}
-                                className={`w-8 h-8 flex items-center justify-center rounded hover:bg-slate-700 text-slate-300 transition-colors ${!isDebugMode && 'opacity-50'}`}
-                                title="Toggle Debug Mode"
+                                onClick={() => setTreeViewStyle(treeViewStyle === 'default' ? 'none' : 'default')}
+                                className={`w-8 h-8 flex items-center justify-center rounded hover:bg-slate-700 text-slate-300 transition-colors ${treeViewStyle === 'none' ? 'text-blue-400' : ''}`}
+                                title="Toggle Tree Style (Default/None)"
                             >
-                                D
+                                {treeViewStyle === 'default' ? '🎨' : '👁️'}
                             </button>
                         </div>
 
@@ -114,10 +130,7 @@ export default function CompareView() {
 
                         <div className="flex gap-3 ml-2">
                             <button
-                                onClick={() => {
-                                    if (isDebugMode) console.log('Compare button clicked');
-                                    compare();
-                                }}
+                                onClick={compare}
                                 disabled={isComparing}
                                 className={`
                   px-5 py-2 rounded-xl font-semibold text-white shadow-lg
@@ -183,6 +196,18 @@ export default function CompareView() {
                         >
                             EXIT ZEN
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Zen Mode Legend & Nav - Floating Bottom Center */}
+            {isZenMode && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none">
+                    <div className="pointer-events-auto shadow-2xl rounded-xl overflow-hidden ring-1 ring-slate-900/10">
+                        <DiffLegend />
+                    </div>
+                    <div className="text-slate-400 text-[10px] font-mono bg-white/90 px-2 py-1 rounded-full shadow-sm backdrop-blur">
+                        Use ↑ ↓ arrows to navigate
                     </div>
                 </div>
             )}

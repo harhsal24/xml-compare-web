@@ -7,3 +7,9 @@ After comparing 2 large xml file it frezees below issues are shown
 like to turn on and off border in tree view, also transfer font size 
 4)I file path is to log i wont fit in xpath that shown below
 
+1) I dont want a Toggle button for debuge mode or not use hardcode value no UI 
+2) I want want my legend back so select and want arrow key to navigate in xml 
+   based on seletected legend
+3) In tree view mode I want a option in settings to choose styling of element 
+  in tree and I want none option also I want it to look like view only mode 
+4) find a empty space in zen mode to show legend and arrows keys to navigate 

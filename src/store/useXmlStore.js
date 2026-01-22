@@ -38,6 +38,7 @@ const useXmlStore = create((set, get) => ({
     fontSize: 14,
     isZenMode: false,
     showBorders: true,
+    treeViewStyle: 'default', // 'default' | 'none'
 
     setFontSize: (size) => {
         if (DEBUG_MODE) console.log('Setting font size:', size);
@@ -54,8 +55,8 @@ const useXmlStore = create((set, get) => ({
         set((state) => ({ showBorders: !state.showBorders }));
     },
 
-    toggleDebugMode: () => {
-        set((state) => ({ isDebugMode: !state.isDebugMode }));
+    setTreeViewStyle: (style) => {
+        set({ treeViewStyle: style });
     },
 
     setLeftXml: (xml) => {
@@ -136,8 +137,7 @@ const useXmlStore = create((set, get) => ({
     },
 
     cycleDiff: (category) => {
-        const { diffResults, selectedXPath, isDebugMode } = get();
-        if (isDebugMode) console.log('Cycling diff category:', category);
+        const { diffResults, selectedXPath } = get();
 
         if (!diffResults || !diffResults[category] || diffResults[category].length === 0) {
             return;
@@ -150,6 +150,34 @@ const useXmlStore = create((set, get) => ({
         if (selectedXPath && items.includes(selectedXPath)) {
             const currentIndex = items.indexOf(selectedXPath);
             nextIndex = (currentIndex + 1) % items.length;
+        }
+
+        set({
+            selectedXPath: items[nextIndex],
+            activeCategory: category,
+        });
+    },
+
+    navigateDiff: (category, direction) => {
+        const { diffResults, selectedXPath } = get();
+
+        if (!diffResults || !diffResults[category] || diffResults[category].length === 0) {
+            return;
+        }
+
+        const items = diffResults[category];
+        let nextIndex = 0;
+
+        if (selectedXPath && items.includes(selectedXPath)) {
+            const currentIndex = items.indexOf(selectedXPath);
+            if (direction === 'next') {
+                nextIndex = (currentIndex + 1) % items.length;
+            } else {
+                nextIndex = (currentIndex - 1 + items.length) % items.length;
+            }
+        } else {
+            // If no selection yet, start from beginning or end based on direction
+            nextIndex = direction === 'next' ? 0 : items.length - 1;
         }
 
         set({
