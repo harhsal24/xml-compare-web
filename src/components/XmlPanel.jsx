@@ -8,7 +8,7 @@ import XmlTreeNode from './XmlTreeNode';
 import XmlSyntaxView from './XmlSyntaxView';
 import useXmlStore from '../store/useXmlStore';
 
-export default function XmlPanel({ side, title, headerControls, syncViewMode, onViewModeChange }) {
+export default function XmlPanel({ side, title, headerControls, syncViewMode, onViewModeChange, scrollRef }) {
     const fileInputRef = useRef(null);
     const [localViewMode, setLocalViewMode] = useState('tree'); // 'text' or 'tree'
 
@@ -156,10 +156,11 @@ export default function XmlPanel({ side, title, headerControls, syncViewMode, on
                 {/* Text View */}
                 {viewMode === 'text' && (
                     <textarea
+                        ref={scrollRef}
                         value={xml}
                         onChange={(e) => setXml(e.target.value)}
                         placeholder="Paste XML here or upload a file..."
-                        className="flex-1 w-full p-4 font-mono bg-slate-50 resize-none focus:outline-none focus:bg-white transition-colors text-slate-800 leading-relaxed"
+                        className="flex-1 w-full p-4 font-mono bg-slate-50 resize-none focus:outline-none focus:bg-white transition-colors text-slate-800 leading-relaxed overflow-auto"
                         style={{ fontSize: `${fontSize}px` }}
                         spellCheck={false}
                     />
@@ -167,7 +168,10 @@ export default function XmlPanel({ side, title, headerControls, syncViewMode, on
 
                 {/* Tree View */}
                 {viewMode === 'tree' && (
-                    <div className="flex-1 bg-gradient-to-b from-slate-50 to-white relative min-h-0 overflow-auto p-4">
+                    <div
+                        ref={scrollRef}
+                        className="flex-1 bg-gradient-to-b from-slate-50 to-white relative min-h-0 overflow-auto p-4"
+                    >
                         {tree ? (
                             <XmlTreeNode node={tree} side={side} />
                         ) : (
@@ -187,7 +191,9 @@ export default function XmlPanel({ side, title, headerControls, syncViewMode, on
 
                 {/* Read-Only View */}
                 {viewMode === 'view' && (
-                    <XmlSyntaxView tree={tree} side={side} />
+                    <div ref={scrollRef} className="flex-1 overflow-auto">
+                        <XmlSyntaxView tree={tree} side={side} />
+                    </div>
                 )}
 
                 {/* XPath Display (Floating Footer) */}

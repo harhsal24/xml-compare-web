@@ -14,7 +14,8 @@ export default function CompareView() {
         compare, clear, activeCategory, navigateDiff,
         fontSize, setFontSize, isZenMode, toggleZenMode,
         showBorders, toggleBorders,
-        toggleLeafDots, showLeafDots, toggleStatusBadges, showStatusBadges
+        toggleLeafDots, showLeafDots, toggleStatusBadges, showStatusBadges,
+        isScrollLocked, toggleScrollLock // Import scroll lock state
     } = useXmlStore();
 
     const [leftPanelWidth, setLeftPanelWidth] = useState(50); // Percentage
@@ -22,7 +23,71 @@ export default function CompareView() {
     const containerRef = useRef(null);
     const isDragging = useRef(false);
 
+    // Scroll refs for synchronization
+    const leftPanelRef = useRef(null);
+    const rightPanelRef = useRef(null);
+    const isScrollingLeft = useRef(false);
+    const isScrollingRight = useRef(false);
+
     const canCompare = leftTree && rightTree;
+
+    // Scroll Synchronization Logic
+    useEffect(() => {
+        const leftEl = leftPanelRef.current;
+        const rightEl = rightPanelRef.current;
+
+        if (!isScrollLocked || !leftEl || !rightEl) return;
+
+        const handleLeftScroll = () => {
+            if (isScrollingRight.current) return;
+            isScrollingLeft.current = true;
+
+            // Vertical Sync (Proportional)
+            if (leftEl.scrollHeight > leftEl.clientHeight && rightEl.scrollHeight > rightEl.clientHeight) {
+                const percentageY = leftEl.scrollTop / (leftEl.scrollHeight - leftEl.clientHeight);
+                rightEl.scrollTop = percentageY * (rightEl.scrollHeight - rightEl.clientHeight);
+            }
+
+            // Horizontal Sync (Proportional)
+            if (leftEl.scrollWidth > leftEl.clientWidth && rightEl.scrollWidth > rightEl.clientWidth) {
+                const percentageX = leftEl.scrollLeft / (leftEl.scrollWidth - leftEl.clientWidth);
+                rightEl.scrollLeft = percentageX * (rightEl.scrollWidth - rightEl.clientWidth);
+            }
+
+            requestAnimationFrame(() => {
+                isScrollingLeft.current = false;
+            });
+        };
+
+        const handleRightScroll = () => {
+            if (isScrollingLeft.current) return;
+            isScrollingRight.current = true;
+
+            // Vertical Sync (Proportional)
+            if (rightEl.scrollHeight > rightEl.clientHeight && leftEl.scrollHeight > leftEl.clientHeight) {
+                const percentageY = rightEl.scrollTop / (rightEl.scrollHeight - rightEl.clientHeight);
+                leftEl.scrollTop = percentageY * (leftEl.scrollHeight - leftEl.clientHeight);
+            }
+
+            // Horizontal Sync (Proportional)
+            if (rightEl.scrollWidth > rightEl.clientWidth && leftEl.scrollWidth > leftEl.clientWidth) {
+                const percentageX = rightEl.scrollLeft / (rightEl.scrollWidth - rightEl.clientWidth);
+                leftEl.scrollLeft = percentageX * (leftEl.scrollWidth - leftEl.clientWidth);
+            }
+
+            requestAnimationFrame(() => {
+                isScrollingRight.current = false;
+            });
+        };
+
+        leftEl.addEventListener('scroll', handleLeftScroll, { passive: true });
+        rightEl.addEventListener('scroll', handleRightScroll, { passive: true });
+
+        return () => {
+            leftEl.removeEventListener('scroll', handleLeftScroll);
+            rightEl.removeEventListener('scroll', handleRightScroll);
+        };
+    }, [isScrollLocked, leftPanelRef.current, rightPanelRef.current]);
 
     // Handle Dragging for Resizing
     useEffect(() => {
@@ -140,6 +205,17 @@ export default function CompareView() {
 
             <div className="w-px h-4 bg-slate-600 mx-1"></div>
 
+            {/* Scroll Lock Toggle */}
+            <button
+                onClick={toggleScrollLock}
+                className={`w-6 h-6 flex items-center justify-center rounded bg-slate-600 hover:bg-slate-500 text-white text-xs transition-colors ${!isScrollLocked && 'opacity-50'}`}
+                title="Toggle Scroll Lock"
+            >
+                {isScrollLocked ? '🔒' : '🔓'}
+            </button>
+
+            <div className="w-px h-4 bg-slate-600 mx-1"></div>
+
             {/* Visual Toggles */}
             <button
                 onClick={toggleBorders}
@@ -175,10 +251,6 @@ export default function CompareView() {
             </button>
         </div>
     );
-
-
-
-
 
     return (
         <div className={`flex flex-col h-full gap-4 ${isZenMode ? 'p-2 h-screen' : ''}`}>
@@ -296,6 +368,7 @@ export default function CompareView() {
                     <XmlPanel
                         side="left"
                         title="Left"
+                        scrollRef={leftPanelRef}
                         headerControls={
                             <div className="flex items-center gap-2">
                                 <DiffLegend compact />
@@ -315,11 +388,13 @@ export default function CompareView() {
                     <div className="w-0.5 h-8 bg-slate-500 group-hover:bg-white rounded-full transition-colors"></div>
                 </div>
 
+
                 {/* Right Panel */}
                 <div style={{ width: `${100 - leftPanelWidth}%` }} className="min-w-0">
                     <XmlPanel
                         side="right"
                         title="Right"
+                        scrollRef={rightPanelRef}
                         headerControls={isZenMode ? <SettingsControls /> : undefined}
                         syncViewMode={isZenMode ? syncedViewMode : undefined}
                         onViewModeChange={isZenMode ? setSyncedViewMode : undefined}
@@ -388,4 +463,3 @@ function StatButton({ label, value, color, onClick, isActive, icon }) {
         </button>
     );
 }
-

@@ -41,6 +41,7 @@ const useXmlStore = create((set, get) => ({
     // treeViewStyle removed as per user request
     showLeafDots: true,
     showStatusBadges: true,
+    isScrollLocked: false, // New state for scroll synchronization
 
     setFontSize: (size) => {
         if (DEBUG_MODE) console.log('Setting font size:', size);
@@ -49,19 +50,25 @@ const useXmlStore = create((set, get) => ({
 
     toggleZenMode: () => {
         const { isZenMode } = get();
-        console.log('Toggling Zen Mode. New value:', !isZenMode);
+        if (DEBUG_MODE) console.log('Toggling Zen Mode. New value:', !isZenMode);
         set({ isZenMode: !isZenMode });
     },
 
     toggleBorders: () => {
         const { showBorders } = get();
-        console.log('Toggling Borders. New value:', !showBorders);
+        if (DEBUG_MODE) console.log('Toggling Borders. New value:', !showBorders);
         set({ showBorders: !showBorders });
+    },
+
+    toggleScrollLock: () => {
+        const { isScrollLocked, isDebugMode } = get();
+        if (isDebugMode) console.log('Toggling Scroll Lock. New value:', !isScrollLocked);
+        set({ isScrollLocked: !isScrollLocked });
     },
 
     toggleLeafDots: () => {
         const { showLeafDots } = get();
-        console.log('Toggling Leaf Dots. New value:', !showLeafDots);
+        if (DEBUG_MODE) console.log('Toggling Leaf Dots. New value:', !showLeafDots);
         set({ showLeafDots: !showLeafDots });
     },
 

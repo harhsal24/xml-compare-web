@@ -39,3 +39,9 @@ when we change that in zen mode and there is no need to specify left xml and rig
       3)toogle leaf dot its not working
       4)toogle status badge is not working
 3) add compare button in zen mode in right panel heder in the middle
+
+1) add option to lock vertical and horizontal scroll
+   1) calculate the horizontal scroll based on 
+   file which is long horizontally
+   3) calculate the vertical scroll based on 
+   file which is long vertically
