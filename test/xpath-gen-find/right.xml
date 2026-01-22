@@ -12,8 +12,5 @@
         <title>Appendix</title>
         <content>Extra content.</content>
     </section>
-    <Extra_Right>
-        <title>Extra Right</title>
-        <content>Extra Right content.</content>
-    </Extra_Right>
+
 </root>

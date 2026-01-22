@@ -101,8 +101,14 @@ const XmlTreeNode = memo(function XmlTreeNode({ node, side, depth = 0 }) {
         if (L.length === 0) return R.map(c => ({ ...c, isPlaceholder: true }));
         if (R.length === 0) return L;
 
-        // Map for fast lookup of Right nodes
-        const rMap = new Map(R.map((c, i) => [c.xpath, i]));
+        // Map for fast lookup of Right nodes (handle duplicates by storing array of indices)
+        const rMap = new Map();
+        R.forEach((c, index) => {
+            if (!rMap.has(c.key)) {
+                rMap.set(c.key, []);
+            }
+            rMap.get(c.key).push(index);
+        });
 
         const merged = [];
         let i = 0, j = 0;
@@ -122,16 +128,17 @@ const XmlTreeNode = memo(function XmlTreeNode({ node, side, depth = 0 }) {
                 continue;
             }
 
-            if (cL.xpath === cR.xpath) {
+            // Match by KEY instead of XPath
+            if (cL.key === cR.key) {
                 merged.push(cL);
                 i++;
                 j++;
             } else {
                 // Mismatch
-                // Check if cL exists later in R (meaning cR is an insertion before cL)
-                // We check if cL index > j to ensure we haven't passed it
-                const indexInR = rMap.get(cL.xpath);
-                if (indexInR !== undefined && indexInR >= j) {
+                const indicesInR = rMap.get(cL.key);
+                const nextIndexInR = indicesInR ? indicesInR.find(idx => idx >= j) : undefined;
+
+                if (nextIndexInR !== undefined) {
                     // cL matches something later in R, so cR must be a gap in L
                     merged.push({ ...cR, isPlaceholder: true });
                     j++;
@@ -228,7 +235,7 @@ const XmlTreeNode = memo(function XmlTreeNode({ node, side, depth = 0 }) {
                 {/* Text content (if leaf node or has direct text) */}
                 {node.textContent && (
                     <span className={`ml-1 ${node.isPlaceholder
-                        ? 'text-slate-400 italic'
+                        ? 'text-transparent select-none' // Hide text for placeholders as requested
                         : (textChanged ? TREE_VIEW_COLORS.textContent.changed : TREE_VIEW_COLORS.textContent.normal)
                         }`}>
                         {node.textContent}
