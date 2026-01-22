@@ -23,7 +23,9 @@ const VirtualTreeNode = memo(({
         rightTree,
         showBorders,
         isDebugMode,
-        treeViewStyle
+        treeViewStyle,
+        showLeafDots,
+        showStatusBadges
     } = useXmlStore();
 
     // Determine the 'other' tree for comparison
@@ -91,7 +93,7 @@ const VirtualTreeNode = memo(({
                             {isExpanded ? '▼' : '▶'}
                         </button>
                     ) : (
-                        <span className="text-slate-300">•</span>
+                        showLeafDots && <span className="text-slate-300">•</span>
                     )}
                 </div>
 
@@ -135,7 +137,7 @@ const VirtualTreeNode = memo(({
                 </div>
 
                 {/* Status badge - Hide in 'none' style unless specific need, or keep it? User said "like view only mode" so maybe hide diff colors but keep structure. Let's hide the badge in none mode for cleaner look. */}
-                {status !== 'neutral' && diffResults && !isNoneStyle && (
+                {status !== 'neutral' && diffResults && !isNoneStyle && showStatusBadges && (
                     <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide shrink-0 ${TREE_VIEW_COLORS.badge[status] || TREE_VIEW_COLORS.badge.missing
                         }`}>
                         {status}

@@ -39,6 +39,8 @@ const useXmlStore = create((set, get) => ({
     isZenMode: false,
     showBorders: true,
     treeViewStyle: 'default', // 'default' | 'none'
+    showLeafDots: true,
+    showStatusBadges: true,
 
     setFontSize: (size) => {
         if (DEBUG_MODE) console.log('Setting font size:', size);
@@ -57,6 +59,14 @@ const useXmlStore = create((set, get) => ({
 
     setTreeViewStyle: (style) => {
         set({ treeViewStyle: style });
+    },
+
+    toggleLeafDots: () => {
+        set((state) => ({ showLeafDots: !state.showLeafDots }));
+    },
+
+    toggleStatusBadges: () => {
+        set((state) => ({ showStatusBadges: !state.showStatusBadges }));
     },
 
     setLeftXml: (xml) => {

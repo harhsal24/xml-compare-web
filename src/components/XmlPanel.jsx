@@ -8,9 +8,20 @@ import XmlTreeNode from './XmlTreeNode';
 import XmlSyntaxView from './XmlSyntaxView';
 import useXmlStore from '../store/useXmlStore';
 
-export default function XmlPanel({ side, title }) {
+export default function XmlPanel({ side, title, headerControls, syncViewMode, onViewModeChange }) {
     const fileInputRef = useRef(null);
-    const [viewMode, setViewMode] = useState('tree'); // 'text' or 'tree'
+    const [localViewMode, setLocalViewMode] = useState('tree'); // 'text' or 'tree'
+
+    // Use synced view mode if provided, otherwise use local
+    const viewMode = syncViewMode !== undefined ? syncViewMode : localViewMode;
+
+    const handleViewModeChange = (mode) => {
+        if (onViewModeChange) {
+            onViewModeChange(mode);
+        } else {
+            setLocalViewMode(mode);
+        }
+    };
 
     const {
         leftXml, rightXml,
@@ -31,7 +42,7 @@ export default function XmlPanel({ side, title }) {
             const reader = new FileReader();
             reader.onload = (event) => {
                 setXml(event.target.result);
-                setViewMode('tree'); // Switch to tree view on upload
+                handleViewModeChange('tree'); // Switch to tree view on upload
             };
             reader.readAsText(file);
         }
@@ -42,23 +53,35 @@ export default function XmlPanel({ side, title }) {
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
-        setViewMode('text'); // Switch to text view on clear
+        handleViewModeChange('text'); // Switch to text view on clear
     };
 
     return (
         <div className="flex flex-col h-full bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-slate-800 to-slate-700">
-                <div className="flex items-center gap-3">
-                    <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                        <span className="text-xl">📄</span>
-                        {title}
-                    </h2>
+            <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-slate-800 to-slate-700 h-14 shrink-0">
+                <div className="flex items-center gap-3 overflow-hidden">
+                    {/* Hide title in Zen mode */}
+                    {!isZenMode && (
+                        <h2 className="text-lg font-semibold text-white flex items-center gap-2 shrink-0">
+                            <span className="text-xl">📄</span>
+                            {title}
+                        </h2>
+                    )}
 
-                    {/* View Toggle */}
-                    <div className="flex bg-slate-900/50 rounded-lg p-0.5 border border-slate-600/50">
+                    {/* Header Controls (Legend, Nav, etc.) */}
+                    {headerControls && (
+                        <div className="flex items-center gap-2 ml-2 overflow-x-auto scrollbar-none">
+                            {headerControls}
+                        </div>
+                    )}
+                </div>
+
+                {/* View Toggle - Hide on right panel in Zen mode (views are synced) */}
+                {!(isZenMode && side === 'right') && (
+                    <div className="flex bg-slate-900/50 rounded-lg p-0.5 border border-slate-600/50 shrink-0">
                         <button
-                            onClick={() => setViewMode('text')}
+                            onClick={() => handleViewModeChange('text')}
                             className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${viewMode === 'text'
                                 ? 'bg-blue-500 text-white shadow-sm'
                                 : 'text-slate-400 hover:text-white'
@@ -68,7 +91,7 @@ export default function XmlPanel({ side, title }) {
                             📝 Text
                         </button>
                         <button
-                            onClick={() => setViewMode('tree')}
+                            onClick={() => handleViewModeChange('tree')}
                             className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${viewMode === 'tree'
                                 ? 'bg-blue-500 text-white shadow-sm'
                                 : 'text-slate-400 hover:text-white'
@@ -78,7 +101,7 @@ export default function XmlPanel({ side, title }) {
                             🌳 Tree
                         </button>
                         <button
-                            onClick={() => setViewMode('view')}
+                            onClick={() => handleViewModeChange('view')}
                             className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${viewMode === 'view'
                                 ? 'bg-blue-500 text-white shadow-sm'
                                 : 'text-slate-400 hover:text-white'
@@ -88,34 +111,37 @@ export default function XmlPanel({ side, title }) {
                             👁️ View
                         </button>
                     </div>
-                </div>
+                )}
 
-                {/* Actions - Hide in Zen Mode for 'Pure UI' */}
-                {!isZenMode && (
-                    <div className="flex gap-2">
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept=".xml"
-                            onChange={handleFileUpload}
-                            className="hidden"
-                            id={`file-upload-${side}`}
-                        />
-                        <label
-                            htmlFor={`file-upload-${side}`}
-                            className="px-3 py-1.5 bg-slate-600 hover:bg-slate-500 text-white rounded-lg text-sm font-medium cursor-pointer transition-colors flex items-center gap-1"
-                        >
-                            <span>📁</span> <span className="hidden sm:inline">Upload</span>
-                        </label>
+                {/* Actions - Upload always visible, Clear hidden in Zen mode */}
+                <div className="flex items-center gap-2 shrink-0">
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".xml"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        id={`file-upload-${side}`}
+                    />
+                    <label
+                        htmlFor={`file-upload-${side}`}
+                        className="px-2 py-1 bg-slate-600 hover:bg-slate-500 text-white rounded text-xs font-medium cursor-pointer transition-colors flex items-center gap-1"
+                        title="Upload XML file"
+                    >
+                        📁
+                    </label>
+                    {!isZenMode && (
                         <button
                             onClick={handleClear}
-                            className="px-3 py-1.5 bg-slate-600/50 text-white rounded-lg text-sm font-medium hover:bg-red-500/80 transition-colors"
+                            className="px-2 py-1 bg-slate-600/50 text-white rounded text-xs font-medium hover:bg-red-500/80 transition-colors"
+                            title="Clear"
                         >
-                            Clear
+                            ✕
                         </button>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
+
 
             {/* Content Area */}
             <div className="flex-1 flex flex-col overflow-hidden relative">
@@ -171,6 +197,6 @@ export default function XmlPanel({ side, title }) {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 }

@@ -13,10 +13,12 @@ export default function CompareView() {
         leftTree, rightTree, diffResults, isComparing,
         compare, clear, activeCategory, navigateDiff,
         fontSize, setFontSize, isZenMode, toggleZenMode,
-        showBorders, toggleBorders, treeViewStyle, setTreeViewStyle
+        showBorders, toggleBorders, treeViewStyle, setTreeViewStyle,
+        toggleLeafDots, toggleStatusBadges, showLeafDots, showStatusBadges
     } = useXmlStore();
 
     const [leftPanelWidth, setLeftPanelWidth] = useState(50); // Percentage
+    const [syncedViewMode, setSyncedViewMode] = useState('tree'); // Synced view mode for Zen mode
     const containerRef = useRef(null);
     const isDragging = useRef(false);
 
@@ -75,13 +77,115 @@ export default function CompareView() {
         document.body.style.userSelect = 'none'; // Disable selection while dragging
     };
 
+    // Navigation Controls Component
+    const NavControls = () => (
+        <div className="flex items-center gap-0.5 shrink-0">
+            <button
+                onClick={() => navigateDiff(activeCategory, 'prev')}
+                className="w-7 h-7 flex items-center justify-center rounded bg-slate-600 hover:bg-slate-500 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Previous Change (Up Arrow)"
+                disabled={!activeCategory}
+            >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+            </button>
+            <button
+                onClick={() => navigateDiff(activeCategory, 'next')}
+                className="w-7 h-7 flex items-center justify-center rounded bg-slate-600 hover:bg-slate-500 text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Next Change (Down Arrow)"
+                disabled={!activeCategory}
+            >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+        </div>
+    );
+
+    // Settings Controls Component (for Zen mode)
+    const SettingsControls = () => (
+        <div className="flex items-center gap-1 shrink-0">
+            {/* Font Size Controls */}
+            <button
+                onClick={() => setFontSize(Math.max(10, fontSize - 2))}
+                className="w-6 h-6 flex items-center justify-center rounded bg-slate-600 hover:bg-slate-500 text-white text-xs transition-colors"
+                title="Decrease font size"
+            >
+                A-
+            </button>
+            <span className="font-mono text-xs w-5 text-center text-slate-300">{fontSize}</span>
+            <button
+                onClick={() => setFontSize(Math.min(32, fontSize + 2))}
+                className="w-6 h-6 flex items-center justify-center rounded bg-slate-600 hover:bg-slate-500 text-white text-xs transition-colors"
+                title="Increase font size"
+            >
+                A+
+            </button>
+
+            <div className="w-px h-4 bg-slate-600 mx-1"></div>
+
+            {/* Toggle Borders */}
+            <button
+                onClick={toggleBorders}
+                className={`w-6 h-6 flex items-center justify-center rounded bg-slate-600 hover:bg-slate-500 text-white text-xs transition-colors ${!showBorders && 'opacity-50'}`}
+                title="Toggle Borders"
+            >
+                B
+            </button>
+
+            {/* Toggle Tree Style */}
+            <button
+                onClick={() => setTreeViewStyle(treeViewStyle === 'default' ? 'none' : 'default')}
+                className={`w-6 h-6 flex items-center justify-center rounded bg-slate-600 hover:bg-slate-500 text-white transition-colors ${treeViewStyle === 'none' ? 'text-blue-400' : ''}`}
+                title="Toggle Tree Style (Default/None)"
+            >
+                {treeViewStyle === 'default' ? '🎨' : '👁️'}
+            </button>
+
+            <div className="w-px h-4 bg-slate-600 mx-1"></div>
+
+            {/* Toggle Leaf Dots */}
+            <button
+                onClick={toggleLeafDots}
+                className={`w-6 h-6 flex items-center justify-center rounded bg-slate-600 hover:bg-slate-500 text-white text-xs transition-colors ${!showLeafDots && 'opacity-50'}`}
+                title="Toggle Leaf Dots"
+            >
+                •
+            </button>
+
+            {/* Toggle Status Badges */}
+            <button
+                onClick={toggleStatusBadges}
+                className={`w-6 h-6 flex items-center justify-center rounded bg-slate-600 hover:bg-slate-500 text-white transition-colors ${!showStatusBadges && 'opacity-50'}`}
+                title="Toggle Status Badges"
+            >
+                🏷️
+            </button>
+
+            <div className="w-px h-4 bg-slate-600 mx-1"></div>
+
+            {/* Exit Zen Mode */}
+            <button
+                onClick={toggleZenMode}
+                className="px-2 py-1 rounded bg-red-500 hover:bg-red-600 text-white text-xs font-bold transition-colors"
+                title="Exit Zen Mode"
+            >
+                ✕
+            </button>
+        </div>
+    );
+
+
+
+
+
     return (
         <div className={`flex flex-col h-full gap-4 ${isZenMode ? 'p-2 h-screen' : ''}`}>
             {/* Action Bar */}
             {!isZenMode && (
                 <div className="flex items-center justify-between flex-wrap gap-4">
-                    <DiffLegend />
-
+                    {/* DiffLegend moved to Left Panel Header */}
                     <div className="flex items-center gap-4">
                         {/* Settings */}
                         <div className="flex items-center gap-2 bg-slate-800/50 p-1.5 rounded-lg border border-slate-600/30">
@@ -114,6 +218,21 @@ export default function CompareView() {
                                 title="Toggle Tree Style (Default/None)"
                             >
                                 {treeViewStyle === 'default' ? '🎨' : '👁️'}
+                            </button>
+                            <div className="h-4 w-px bg-slate-700 mx-1"></div>
+                            <button
+                                onClick={toggleLeafDots}
+                                className={`w-8 h-8 flex items-center justify-center rounded hover:bg-slate-700 text-slate-300 transition-colors ${!showLeafDots && 'opacity-50'}`}
+                                title="Toggle Leaf Dots"
+                            >
+                                •
+                            </button>
+                            <button
+                                onClick={toggleStatusBadges}
+                                className={`w-8 h-8 flex items-center justify-center rounded hover:bg-slate-700 text-slate-300 transition-colors ${!showStatusBadges && 'opacity-50'}`}
+                                title="Toggle Status Badges"
+                            >
+                                🏷️
                             </button>
                         </div>
 
@@ -165,49 +284,11 @@ export default function CompareView() {
                 </div>
             )}
 
-            {/* Floating Zen Mode Exit Button (Only in Zen Mode) */}
+            {/* Zen Mode Legend - Floating Bottom Center */}
             {isZenMode && (
-                <div className="absolute top-4 right-4 z-50 flex gap-2">
-                    <div className="flex items-center gap-2 bg-slate-900/90 backdrop-blur text-white p-1 rounded-lg shadow-xl border border-slate-700">
-                        <button
-                            onClick={() => setFontSize(Math.max(10, fontSize - 2))}
-                            className="w-8 h-8 flex items-center justify-center rounded hover:bg-slate-700"
-                        >
-                            -
-                        </button>
-                        <span className="font-mono text-sm w-6 text-center">{fontSize}</span>
-                        <button
-                            onClick={() => setFontSize(Math.min(32, fontSize + 2))}
-                            className="w-8 h-8 flex items-center justify-center rounded hover:bg-slate-700"
-                        >
-                            +
-                        </button>
-                        <button
-                            onClick={toggleBorders}
-                            className={`w-8 h-8 flex items-center justify-center rounded hover:bg-slate-700 text-slate-300 transition-colors ${!showBorders && 'opacity-50'}`}
-                            title="Toggle Borders"
-                        >
-                            B
-                        </button>
-                        <div className="w-px h-4 bg-slate-700 mx-1"></div>
-                        <button
-                            onClick={toggleZenMode}
-                            className="px-3 py-1.5 rounded bg-red-500 hover:bg-red-600 text-xs font-bold transition-colors"
-                        >
-                            EXIT ZEN
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* Zen Mode Legend & Nav - Floating Bottom Center */}
-            {isZenMode && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none">
-                    <div className="pointer-events-auto shadow-2xl rounded-xl overflow-hidden ring-1 ring-slate-900/10">
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 pointer-events-auto">
+                    <div className="shadow-2xl rounded-xl overflow-hidden ring-1 ring-slate-900/10">
                         <DiffLegend />
-                    </div>
-                    <div className="text-slate-400 text-[10px] font-mono bg-white/90 px-2 py-1 rounded-full shadow-sm backdrop-blur">
-                        Use ↑ ↓ arrows to navigate
                     </div>
                 </div>
             )}
@@ -219,7 +300,18 @@ export default function CompareView() {
             >
                 {/* Left Panel */}
                 <div style={{ width: `${leftPanelWidth}%` }} className="min-w-0">
-                    <XmlPanel side="left" title="Left XML" />
+                    <XmlPanel
+                        side="left"
+                        title="Left"
+                        headerControls={
+                            <div className="flex items-center gap-2">
+                                <DiffLegend compact />
+                                <NavControls />
+                            </div>
+                        }
+                        syncViewMode={isZenMode ? syncedViewMode : undefined}
+                        onViewModeChange={isZenMode ? setSyncedViewMode : undefined}
+                    />
                 </div>
 
                 {/* Resizer Handle */}
@@ -232,7 +324,13 @@ export default function CompareView() {
 
                 {/* Right Panel */}
                 <div style={{ width: `${100 - leftPanelWidth}%` }} className="min-w-0">
-                    <XmlPanel side="right" title="Right XML" />
+                    <XmlPanel
+                        side="right"
+                        title="Right"
+                        headerControls={isZenMode ? <SettingsControls /> : undefined}
+                        syncViewMode={isZenMode ? syncedViewMode : undefined}
+                        onViewModeChange={isZenMode ? setSyncedViewMode : undefined}
+                    />
                 </div>
             </div>
         </div>
