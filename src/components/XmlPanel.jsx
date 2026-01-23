@@ -44,10 +44,35 @@ export default function XmlPanel({ side, title, headerControls, syncViewMode, on
         if (file) {
             const reader = new FileReader();
             reader.onload = (event) => {
-                setXml(event.target.result);
-                handleViewModeChange('tree'); // Switch to tree view on upload
+                // In Electron (and some browsers), file.path gives the full path
+                // Otherwise we just use the name
+                setXml(event.target.result, {
+                    name: file.name,
+                    path: file.path || ''
+                });
+                handleViewModeChange('tree');
             };
             reader.readAsText(file);
+            // Reset input so same file can be selected again
+            e.target.value = '';
+        }
+    };
+
+    const handleNativeUpload = async () => {
+        if (window.electronAPI) {
+            try {
+                const result = await window.electronAPI.openFileDialog();
+                if (result) {
+                    const { filePath, content } = result;
+                    // Extract filename from path
+                    const name = filePath.split(/[/\\]/).pop();
+                    setXml(content, { name, path: filePath });
+                    handleViewModeChange('tree');
+                }
+            } catch (err) {
+                console.error('File open error:', err);
+                addToast('Failed to open file', 'error');
+            }
         }
     };
 
@@ -121,21 +146,33 @@ export default function XmlPanel({ side, title, headerControls, syncViewMode, on
 
                 {/* Actions - Upload always visible, Clear hidden in Zen mode */}
                 <div className="flex items-center gap-2 shrink-0">
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".xml"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                        id={`file-upload-${side}`}
-                    />
-                    <label
-                        htmlFor={`file-upload-${side}`}
-                        className="px-2 py-1 bg-slate-600 hover:bg-slate-500 text-white rounded text-xs font-medium cursor-pointer transition-colors flex items-center gap-1"
-                        title="Upload XML file"
-                    >
-                        📁
-                    </label>
+                    {window.electronAPI ? (
+                        <button
+                            onClick={handleNativeUpload}
+                            className="px-2 py-1 bg-slate-600 hover:bg-slate-500 text-white rounded text-xs font-medium cursor-pointer transition-colors flex items-center gap-1"
+                            title="Open XML file"
+                        >
+                            📁
+                        </button>
+                    ) : (
+                        <>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept=".xml"
+                                onChange={handleFileUpload}
+                                className="hidden"
+                                id={`file-upload-${side}`}
+                            />
+                            <label
+                                htmlFor={`file-upload-${side}`}
+                                className="px-2 py-1 bg-slate-600 hover:bg-slate-500 text-white rounded text-xs font-medium cursor-pointer transition-colors flex items-center gap-1"
+                                title="Upload XML file"
+                            >
+                                📁
+                            </label>
+                        </>
+                    )}
                     {!isZenMode && (
                         <button
                             onClick={handleClear}

@@ -1,7 +1,10 @@
 {
-  "name": "xml-compare-web",
+  "name": "xml-compare",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Side-by-side XML comparison with XPath awareness",
+  "author": "Harsh",
+  "main": "electron/main.cjs",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +12,10 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "electron:dev": "concurrently -k \"cross-env NODE_ENV=development vite\" \"wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",
+    "electron:preview": "cross-env NODE_ENV=production electron .",
+    "electron:build": "vite build && electron-builder --win"
   },
   "dependencies": {
     "react": "^19.2.0",
@@ -23,6 +29,11 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
     "babel-plugin-react-compiler": "^1.0.0",
+    "chokidar": "^5.0.0",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^40.0.0",
+    "electron-builder": "^26.4.0",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
@@ -30,7 +41,28 @@
     "jsdom": "^27.4.0",
     "tailwindcss": "^4.1.18",
     "vite": "^6.3.5",
-    "vitest": "^4.0.17"
+    "vitest": "^4.0.17",
+    "wait-on": "^9.0.3"
+  },
+  "build": {
+    "appId": "com.xmlcompare.app",
+    "productName": "XML Compare",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "node_modules/chokidar/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "public/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   },
   "overrides": {}
 }

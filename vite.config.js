@@ -5,6 +5,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: './', // Required for Electron file:// protocol
   plugins: [
     react({
       babel: {
@@ -19,3 +20,4 @@ export default defineConfig({
     setupFiles: './src/test/vitest-setup.js',
   },
 })
+

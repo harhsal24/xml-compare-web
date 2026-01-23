@@ -17,7 +17,8 @@ export default function CompareView() {
         showBorders, toggleBorders,
         toggleLeafDots, showLeafDots, toggleStatusBadges, showStatusBadges,
         isScrollLocked, toggleScrollLock, // Import scroll lock state
-        setSelectedXPath // Import setSelectedXPath
+        setSelectedXPath, // Import setSelectedXPath
+        leftFileMeta, rightFileMeta
     } = useXmlStore();
     const { addToast } = useToast();
 
@@ -304,6 +305,14 @@ export default function CompareView() {
                             >
                                 A+
                             </button>
+                            <div className="h-4 w-px bg-slate-700 mx-1"></div>
+                            <button
+                                onClick={toggleScrollLock}
+                                className={`w-8 h-8 flex items-center justify-center rounded hover:bg-slate-700 text-slate-300 transition-colors ${!isScrollLocked && 'opacity-50'}`}
+                                title="Toggle Scroll Lock"
+                            >
+                                {isScrollLocked ? '🔒' : '🔓'}
+                            </button>
                             <button
                                 onClick={toggleBorders}
                                 className={`w-8 h-8 flex items-center justify-center rounded hover:bg-slate-700 text-slate-300 transition-colors ${!showBorders && 'opacity-50'}`}
@@ -376,14 +385,14 @@ export default function CompareView() {
                 </div>
             )}
 
-            {/* Zen Mode Legend - Floating Bottom Center */}
+            {/* Zen Mode Legend - Floating Bottom Center
             {isZenMode && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 pointer-events-auto">
                     <div className="shadow-2xl rounded-xl overflow-hidden ring-1 ring-slate-900/10">
                         <DiffLegend />
                     </div>
                 </div>
-            )}
+            )} */}
 
             {/* Panels Container */}
             <div
@@ -394,7 +403,7 @@ export default function CompareView() {
                 <div style={{ width: `${leftPanelWidth}%` }} className="min-w-0">
                     <XmlPanel
                         side="left"
-                        title="Left"
+                        title={leftFileMeta.path || leftFileMeta.name || "Left"}
                         scrollRef={leftPanelRef}
                         headerControls={
                             <div className="flex items-center gap-2">
@@ -420,7 +429,7 @@ export default function CompareView() {
                 <div style={{ width: `${100 - leftPanelWidth}%` }} className="min-w-0">
                     <XmlPanel
                         side="right"
-                        title="Right"
+                        title={rightFileMeta.path || rightFileMeta.name || "Right"}
                         scrollRef={rightPanelRef}
                         headerControls={isZenMode ? <SettingsControls /> : undefined}
                         syncViewMode={isZenMode ? syncedViewMode : undefined}

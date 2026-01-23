@@ -46,6 +46,10 @@ const useXmlStore = create((set, get) => ({
     diffResults: null,
     isComparing: false,
 
+    // File Metadata
+    leftFileMeta: { name: 'Left', path: '' },
+    rightFileMeta: { name: 'Right', path: '' },
+
     // Currently selected XPath (for highlighting)
     selectedXPath: null,
 
@@ -128,7 +132,7 @@ const useXmlStore = create((set, get) => ({
         set({ showStatusBadges: !showStatusBadges });
     },
 
-    setLeftXml: (xml) => {
+    setLeftXml: (xml, meta = null) => {
         if (DEBUG_MODE) console.log('Setting left XML');
         set({
             leftXml: xml,
@@ -137,10 +141,11 @@ const useXmlStore = create((set, get) => ({
             diffResults: null,
             selectedXPath: null,
             activeCategory: null,
+            ...(meta && { leftFileMeta: meta }),
         });
     },
 
-    setRightXml: (xml) => {
+    setRightXml: (xml, meta = null) => {
         if (DEBUG_MODE) console.log('Setting right XML');
         set({
             rightXml: xml,
@@ -149,6 +154,7 @@ const useXmlStore = create((set, get) => ({
             diffResults: null,
             selectedXPath: null,
             activeCategory: null,
+            ...(meta && { rightFileMeta: meta }),
         });
     },
 
@@ -268,6 +274,8 @@ const useXmlStore = create((set, get) => ({
             diffResults: null,
             selectedXPath: null,
             activeCategory: null,
+            leftFileMeta: { name: 'Left', path: '' },
+            rightFileMeta: { name: 'Right', path: '' },
         });
     },
 }));
