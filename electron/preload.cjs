@@ -33,6 +33,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
         return () => ipcRenderer.removeListener('file-deleted', handler);
     },
 
+    onMenuOpenFile: (callback) => {
+        const handler = (event, filePath) => callback(filePath);
+        ipcRenderer.on('menu:open-file', handler);
+        return () => ipcRenderer.removeListener('menu:open-file', handler);
+    },
+
     // Platform info
     isElectron: true,
     platform: process.platform,

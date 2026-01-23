@@ -5,9 +5,10 @@
  * - Creating the main application window
  * - File watching for external changes (like VS Code)
  * - IPC communication with renderer
+ * - Native Application Menu
  */
 
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const chokidar = require('chokidar');
@@ -18,6 +19,134 @@ const fileWatchers = new Map();
 let mainWindow;
 
 const isDev = process.env.NODE_ENV === 'development';
+const isMac = process.platform === 'darwin';
+
+function createMenu() {
+    const template = [
+        // { role: 'appMenu' }
+        ...(isMac
+            ? [{
+                label: app.name,
+                submenu: [
+                    { role: 'about' },
+                    { type: 'separator' },
+                    { role: 'services' },
+                    { type: 'separator' },
+                    { role: 'hide' },
+                    { role: 'hideOthers' },
+                    { role: 'unhide' },
+                    { type: 'separator' },
+                    { role: 'quit' }
+                ]
+            }]
+            : []),
+        // { role: 'fileMenu' }
+        {
+            label: 'File',
+            submenu: [
+                {
+                    label: 'Open File...',
+                    accelerator: 'CmdOrCtrl+O',
+                    click: async () => {
+                        if (mainWindow) {
+                            const result = await dialog.showOpenDialog(mainWindow, {
+                                properties: ['openFile'],
+                                filters: [
+                                    { name: 'XML Files', extensions: ['xml'] },
+                                    { name: 'All Files', extensions: ['*'] },
+                                ],
+                            });
+
+                            if (!result.canceled && result.filePaths.length > 0) {
+                                mainWindow.webContents.send('menu:open-file', result.filePaths[0]);
+                            }
+                        }
+                    }
+                },
+                { type: 'separator' },
+                isMac ? { role: 'close' } : { role: 'quit' }
+            ]
+        },
+        // { role: 'editMenu' }
+        {
+            label: 'Edit',
+            submenu: [
+                { role: 'undo' },
+                { role: 'redo' },
+                { type: 'separator' },
+                { role: 'cut' },
+                { role: 'copy' },
+                { role: 'paste' },
+                ...(isMac
+                    ? [
+                        { role: 'pasteAndMatchStyle' },
+                        { role: 'delete' },
+                        { role: 'selectAll' },
+                        { type: 'separator' },
+                        {
+                            label: 'Speech',
+                            submenu: [
+                                { role: 'startSpeaking' },
+                                { role: 'stopSpeaking' }
+                            ]
+                        }
+                    ]
+                    : [
+                        { role: 'delete' },
+                        { type: 'separator' },
+                        { role: 'selectAll' }
+                    ])
+            ]
+        },
+        // { role: 'viewMenu' }
+        {
+            label: 'View',
+            submenu: [
+                { role: 'reload' },
+                { role: 'forceReload' },
+                { role: 'toggleDevTools' },
+                { type: 'separator' },
+                { role: 'resetZoom' },
+                { role: 'zoomIn' },
+                { role: 'zoomOut' },
+                { type: 'separator' },
+                { role: 'togglefullscreen' }
+            ]
+        },
+        // { role: 'windowMenu' }
+        {
+            label: 'Window',
+            submenu: [
+                { role: 'minimize' },
+                { role: 'zoom' },
+                ...(isMac
+                    ? [
+                        { type: 'separator' },
+                        { role: 'front' },
+                        { type: 'separator' },
+                        { role: 'window' }
+                    ]
+                    : [
+                        { role: 'close' }
+                    ])
+            ]
+        },
+        {
+            role: 'help',
+            submenu: [
+                {
+                    label: 'Learn More',
+                    click: async () => {
+                        await shell.openExternal('https://github.com');
+                    }
+                }
+            ]
+        }
+    ];
+
+    const menu = Menu.buildFromTemplate(template);
+    Menu.setApplicationMenu(menu);
+}
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -33,6 +162,8 @@ function createWindow() {
             contextIsolation: true,
         },
     });
+
+    createMenu();
 
     // Load the app
     if (isDev) {
@@ -64,11 +195,11 @@ function watchFile(filePath) {
         },
     });
 
-    watcher.on('change', () => {
+    watcher.on('change', async () => {
         console.log(`File changed externally: ${filePath}`);
         // Read the new content
         try {
-            const content = fs.readFileSync(filePath, 'utf-8');
+            const content = await fs.promises.readFile(filePath, 'utf-8');
             if (mainWindow && !mainWindow.isDestroyed()) {
                 mainWindow.webContents.send('file-changed', { filePath, content });
             }
@@ -118,15 +249,20 @@ ipcMain.handle('dialog:openFile', async () => {
 
     if (!result.canceled && result.filePaths.length > 0) {
         const filePath = result.filePaths[0];
-        const content = fs.readFileSync(filePath, 'utf-8');
-        return { filePath, content };
+        try {
+            const content = await fs.promises.readFile(filePath, 'utf-8');
+            return { filePath, content };
+        } catch (err) {
+            console.error('Failed to read file:', err);
+            return null;
+        }
     }
     return null;
 });
 
 ipcMain.handle('file:read', async (event, filePath) => {
     try {
-        const content = fs.readFileSync(filePath, 'utf-8');
+        const content = await fs.promises.readFile(filePath, 'utf-8');
         return { success: true, content };
     } catch (err) {
         return { success: false, error: err.message };

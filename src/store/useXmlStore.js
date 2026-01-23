@@ -29,6 +29,16 @@ const loadXpathSettings = () => {
     return defaultXpathSettings;
 };
 
+// Worker instance
+let worker = null;
+
+const getWorker = () => {
+    if (!worker) {
+        worker = new Worker(new URL('../core/xml.worker.js', import.meta.url), { type: 'module' });
+    }
+    return worker;
+};
+
 const useXmlStore = create((set, get) => ({
     // Raw XML strings
     leftXml: '',
@@ -160,7 +170,7 @@ const useXmlStore = create((set, get) => ({
 
     compare: () => {
         const { leftXml, rightXml, isDebugMode, xpathSettings } = get();
-        if (isDebugMode) console.log('Comparing XMLs');
+        if (isDebugMode) console.log('Comparing XMLs (Worker)');
 
         if (!leftXml || !rightXml) {
             return;
@@ -168,41 +178,48 @@ const useXmlStore = create((set, get) => ({
 
         set({ isComparing: true, diffResults: null });
 
-        // Use setTimeout to allow UI to update before heavy processing
-        setTimeout(() => {
-            try {
-                // Step 1: Parse both XML strings
-                if (isDebugMode) console.log('Parsing left XML...');
-                const leftTree = parseXml(leftXml, xpathSettings);
+        const workerInstance = getWorker();
+        const requestId = Date.now();
 
-                if (isDebugMode) console.log('Parsing right XML...');
-                const rightTree = parseXml(rightXml, xpathSettings);
+        // One-time listener for the response
+        const handleMessage = (e) => {
+            const { type, id, payload, error } = e.data;
+            if (id !== requestId) return; // Ignore old requests
 
-                // Step 2: Compare the parsed trees
-                if (isDebugMode) console.log('Comparing trees...');
-                const diffResults = compareXml(leftTree, rightTree);
-                if (isDebugMode) console.log('Comparison finished.');
-
+            if (type === 'RESULT') {
+                if (isDebugMode) console.log('Worker finished processing');
                 set({
-                    leftTree,
-                    rightTree,
-                    diffResults,
+                    leftTree: payload.leftTree,
+                    rightTree: payload.rightTree,
+                    diffResults: payload.diffResults,
+                    leftError: payload.leftError,
+                    rightError: payload.rightError,
                     isComparing: false,
-                    leftError: null,
-                    rightError: null,
                 });
-            } catch (error) {
-                if (isDebugMode) console.error('Error during processing:', error);
+            } else if (type === 'ERROR') {
+                if (isDebugMode) console.error('Worker error:', error);
                 set({
                     isComparing: false,
-                    leftError: error.message,
-                    rightError: error.message,
+                    leftError: error,
+                    rightError: error,
                     diffResults: null,
-                    leftTree: null,
-                    rightTree: null,
                 });
             }
-        }, 50); // Small delay to let UI update
+
+            workerInstance.removeEventListener('message', handleMessage);
+        };
+
+        workerInstance.addEventListener('message', handleMessage);
+
+        workerInstance.postMessage({
+            type: 'PARSE_AND_COMPARE',
+            id: requestId,
+            payload: {
+                leftXml,
+                rightXml,
+                xpathSettings
+            }
+        });
     },
 
     setSelectedXPath: (xpath) => {
